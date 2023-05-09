@@ -128,4 +128,5 @@ $lang = array(
   "Crop" => "Recortar",
   "Save" => "Guardar",
   "Croping file..." => "Recortando Imagen...",
+  "Dimensions" => "Dimensiones",
 );

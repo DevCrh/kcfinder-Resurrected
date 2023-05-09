@@ -82,7 +82,7 @@ _.showFiles = function (callBack, selected) {
             f.find('.name').text(file.name);
             f.find('.time').html(file.date);
             f.find('.size').html(_.humanSize(file.size));
-            if (file.type !== false)
+            if (file.isImage)
                 f.find('.dimensions').html(file.width + 'x' + file.height + 'px');
             f.data(file);
 
