@@ -5,7 +5,7 @@ define('PROTOCOL', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 define('HOST', $_SERVER['HTTP_HOST'] === 'localhost' ? 'localhost' : $_SERVER['HTTP_HOST']); // Dominio o host localhost.com tudominio.com
 define('CUR_PAGE', PROTOCOL . '://' . HOST);
 
-$origin = parse_url($_SERVER['HTTP_REFERER']);
+$origin = isset($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER']) : null;
 $valid_domains = array("localhost", "127.0.0.1");
 
 if (!in_array($origin['host'], $valid_domains)) {

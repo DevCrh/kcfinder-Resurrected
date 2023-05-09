@@ -113,10 +113,8 @@ $_DEFAULTS = array(
 );
 
 /** Incluir una configuración local, si la hay 
- * Este es el mejor lugar para anular la configuración predeterminada y agregar cualquier 
- * Lógica de negocio a la configuración. No es recomendable hackear el 
- * Estructura de configuración principal, aunque puede proporcionar una forma rápida e indolora 
- * solución :-) 
+ * Este es el mejor lugar para anular la configuración predeterminada y agregar cualquier ajuste
+ * No es recomendable modificar la Estructura de configuración principal.
  */
 
 if (file_exists(dirname(__FILE__) . '/config.local.php')) {
