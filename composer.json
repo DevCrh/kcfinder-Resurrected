@@ -1,0 +1,39 @@
+{
+    "name": "devcarlo/kcfinder",
+    "description": "KCFinder web file manager",
+    "version": "3.80",
+    "type": "library",
+    "keywords": [
+        "kcfinder",
+        "finder",
+        "file",
+        "manager",
+        "explorer",
+        "file manager",
+        "file explorer"
+    ],
+    "time": "2023-05-06",
+    "license": [
+        "GPL-3.0+",
+        "LGPL-3.0+"
+    ],
+    "support": {
+        "email": "",
+        "issues": "https://github.com/DevCrh/kcfinder-Resurrected",
+        "source": "https://github.com/DevCrh/kcfinder-Resurrected"
+    },
+    "require": {
+        "php": ">=7.4",
+        "ext-gd": "*"
+    },
+    "suggest": {
+        "ext-fileinfo": "*",
+        "ext-exif": "*",
+        "ext-curl": "*",
+        "ext-http": "*",
+        "ext-sockets": "*",
+        "ext-imagick": "*",
+        "ext-gmagick": "*",
+        "ext-zip": "*"
+    }
+}
