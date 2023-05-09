@@ -1,7 +1,7 @@
-# KCFinder Resurrected web file manager
+# KCFinder Resurrected Ajax & PHP web file manager 
 
 ### Description
-KCFinder Resurrected, es la continuacion del proyecto original kcfinder creado por Pavel Tzonkov, el cual esta sin actualizaciones de seguridad ni mejoras desde Sep 27, 2014.
+KCFinder Resurrected, es la continuación del proyecto original kcfinder creado por Pavel Tzonkov, el cual esta sin soporte ni desarrollo desde Sep 2014, KCFinder Resurrected fue actualizado a la ultima version de jQuery y jQuery UI, se corrigieron algunos errores de seguridad críticos y se agregaron nuevas características como el poder recortar imágenes ya subidas desde el menu con Jcrop, ademas de contar con mejoras para su mejor funcionamiento en versiones actuales de php y una renovación del tema default para una interfaz mas moderna.
 
 ## Overview
 KCFinder es un reemplazo gratuito de código abierto del administrador de archivos web CKFinder. Se puede integrar en los editores web CKEditor y TinyMCE WYSIWYG (o sus aplicaciones web personalizadas) para cargar y administrar imágenes y otros archivos que se pueden incrustar en el contenido HTML generado por un editor.
@@ -14,7 +14,7 @@ KCFinder es un reemplazo gratuito de código abierto del administrador de archiv
 Original project by Pavel Tzonkov https://github.com/sunhater/kcfinder
 
 ## Features
-* Recorte de imagenes Subidas con Jcrop
+* Recorte de imágenes Subidas con Jcrop
 * Jquery y Jquery Ui en su ultima Version (jQuery v3.6.4 y  jQuery UI v1.13.2)
 * Motor Ajax con respuestas JSON 
 * Carga de varios archivos 
@@ -29,7 +29,7 @@ Original project by Pavel Tzonkov https://github.com/sunhater/kcfinder
 * Soporte de marca de agua PNG * Resolución de miniaturas configurable 
 * Rotar y / o voltear automáticamente las imágenes cargadas dependiendo de la etiqueta EXIF de información de orientación si existe 
 * Soporte de múltiples temas 
-* Sistema multilingüe 
+* Soporta varios idiomas
 * Vista previa de imágenes en tamaño completo
 
 ## Compatibility
