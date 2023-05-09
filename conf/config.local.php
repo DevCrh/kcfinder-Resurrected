@@ -5,6 +5,11 @@ define('PROTOCOL', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 define('HOST', $_SERVER['HTTP_HOST'] === 'localhost' ? 'localhost' : $_SERVER['HTTP_HOST']); // Dominio o host localhost.com tudominio.com
 define('CUR_PAGE', PROTOCOL . '://' . HOST);
 
+/**
+ * $valid_domains
+ * Configure el dominio autorizado para acceder a kcfinder
+ * ej. example.com www.example.com
+ */
 $origin = isset($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER']) : null;
 $valid_domains = array("localhost", "127.0.0.1");
 
