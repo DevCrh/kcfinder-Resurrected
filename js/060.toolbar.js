@@ -51,11 +51,12 @@ _.initToolbar = function () {
     });
 
     $('#toolbar a[href="kcact:about"]').click(function () {
+        const now = new Date();
         var html = '<div class="box about">' +
             '<div class="head">KCFinder ' + _.version + '</div>';
         html +=
             '<div>' + _.label("Licenses:") + ' <a href="http://opensource.org/licenses/GPL-3.0" target="_blank">GPLv3</a> & <a href="http://opensource.org/licenses/LGPL-3.0" target="_blank">LGPLv3</a></div>' +
-            '<div>Esta bifurcación es administrada por DevCrh &copy; 2023</div>' +
+            '<div>Esta bifurcación es administrada por DevCrh &copy; ' + now.getFullYear() + '</div>' +
             '<div></div>';
         var dlg = _.dialog(_.label("About"), html, {
             width: 301
