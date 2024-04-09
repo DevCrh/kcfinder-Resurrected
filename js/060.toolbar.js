@@ -94,42 +94,12 @@ _.uploadFile = function (form) {
         _.initUploadButton();
         return;
     }
-
     /**
-     * Deprecated
+     * Fix Bug cann't upload file via upload button to subfolder.
+     * Picture still ends in root folder
+     * Thanks nickn17
      */
-    /* form.elements[1].value = _.dir;
-     $('<iframe id="uploadResponse" name="uploadResponse" src="javascript:;"></iframe>').prependTo(document.body);
-     $('#loading').html(_.label("Uploading file...")).show();
-     form.submit();
-     $('#uploadResponse').load(function () {
-         var response = $(this).contents().find('body').text();
-         $('#loading').hide();
-         response = response.split("\n");
-
-         var selected = [],
-             errors = [];
-         $.each(response, function (i, row) {
-             if (row.substr(0, 1) == "/")
-                 selected[selected.length] = row.substr(1, row.length - 1);
-             else
-                 errors[errors.length] = row;
-         });
-
-         if (errors.length) {
-             errors = errors.join("\n");
-             if (errors.replace(/^\s+/g, "").replace(/\s+$/g, "").length)
-                 _.alert(errors);
-         }
-         if (!selected.length)
-             selected = null;
-         _.refresh(selected);
-         $('#upload').detach();
-         setTimeout(function () {
-             $('#uploadResponse').detach();
-         }, 1);
-         _.initUploadButton();
-     });*/
+    $('form input[name=dir]').val(_.dir);
 
     /* Fix new jQuery v3.6.4  */
     var post = new FormData(form);
