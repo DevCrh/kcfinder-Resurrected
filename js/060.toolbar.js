@@ -1,7 +1,7 @@
 /** 
  *   @desc Toolbar functionality
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -78,7 +78,7 @@ _.initUploadButton = function () {
         height = btn.outerHeight(),
         jInput = $('#upload input');
 
-    $('#toolbar').prepend('<div id="upload" style="top:' + top + 'px;width:' + width + 'px;height:' + height + 'px"><form enctype="multipart/form-data" method="post" target="uploadResponse" action="' + _.getURL('upload') + '"><input type="file" name="upload[]" onchange="_.uploadFile(this.form)" style="height:' + height + 'px" multiple="multiple" /><input type="hidden" name="dir" value="" /></form></div>');
+    $('#toolbar').prepend('<div id="upload" style="top:' + top + 'px;width:' + width + 'px;height:' + height + 'px"><form enctype="multipart/form-data" method="post" target="uploadResponse" action="' + _.getURL('upload') + '"><input type="file" name="upload[]" onchange="_.uploadFile(this.form)" style="height:' + height + 'px" multiple="multiple" /><input type="hidden" name="csrf_token" value="' + csrfToken + '"></form></div>');
     jInput.css('margin-left', "-" + (jInput.outerWidth() - width));
     $('#upload').mouseover(function () {
         $('#toolbar a[href="kcact:upload"]').addClass('hover');
@@ -87,62 +87,78 @@ _.initUploadButton = function () {
     });
 };
 
-
 _.uploadFile = function (form) {
+    // Verifica si la carpeta actual tiene permisos de escritura
     if (!_.dirWritable) {
+        // Muestra un mensaje de error si no se puede escribir
         _.alert(_.label("Cannot write to upload folder."));
+        // Elimina el componente de carga y reinicia el botón de subida
         $('#upload').detach();
         _.initUploadButton();
-        return;
+        return; // Termina la ejecución de la función
     }
-    /**
-     * Fix Bug cann't upload file via upload button to subfolder.
-     * Picture still ends in root folder
-     * Thanks nickn17
-     */
-    $('form input[name=dir]').val(_.dir);
 
-    /* Fix new jQuery v3.6.4  */
+    // Crea un objeto FormData con los datos del formulario para realizar una solicitud AJAX
     var post = new FormData(form);
+    post.append('directory', _.dir);
     $.ajax({
-        url: $(form).attr('action'),
-        type: 'POST',
-        data: post,
-        processData: false,
-        contentType: false,
-        cache: false,
+        url: $(form).attr('action'), // URL del formulario
+        type: 'POST', // Método HTTP para enviar los datos
+        data: post, // Datos a enviar
+        processData: false, // Indica que no se deben procesar los datos (se usan directamente)
+        contentType: false, // Desactiva el encabezado 'Content-Type' predeterminado
+        cache: false, // No almacena en caché la respuesta
+
+        // Antes de enviar la solicitud, muestra un mensaje de carga
         beforeSend: function () {
             $('#loading').html(_.label("Uploading file...")).show();
         },
+        // En caso de éxito en la subida
         success: function (data) {
+            // Divide la respuesta del servidor por líneas
             var response = data.split("\n"),
-                selected = [],
-                errors = [];
+                selected = [], // Archivos seleccionados correctamente
+                errors = []; // Errores encontrados
+
+            // Procesa cada línea de la respuesta
             $.each(response, function (i, row) {
+                // Si la línea comienza con "/", es un archivo subido exitosamente
                 if (row.substr(0, 1) == '/')
-                    selected[selected.length] = row.substr(1, row.length - 1)
+                    selected[selected.length] = row.substr(1, row.length - 1);
                 else
-                    errors[errors.length] = row;
+                    errors[errors.length] = row; // Si no, se considera un error
             });
 
+            // Si hay errores, los une en un mensaje y los muestra
             if (errors.length) {
                 errors = errors.join("\n");
                 if (errors.replace(/^\s+/g, "").replace(/\s+$/g, "").length)
                     _.alert(errors);
             }
 
+            // Si no hay archivos seleccionados, establece 'selected' como null
             if (!selected.length)
-                selected = null
+                selected = null;
 
+            // Actualiza la vista con los archivos subidos
             _.refresh(selected);
+            // Elimina el componente de carga
             $('#upload').detach();
         },
+
+        // En caso de error en la solicitud AJAX
         error: function (xhr) {
+            // Muestra un mensaje de error genérico
             _.alert(_.label("No file was uploaded."));
+            // Opcionalmente, imprime el error en la consola para depuración
             console.log(xhr.responseText);
         },
+
+        // Siempre se ejecuta al finalizar la solicitud (éxito o error)
         complete: function () {
+            // Oculta el mensaje de carga
             $('#loading').hide();
+            // Reinicia el botón de subida y actualiza la vista
             _.initUploadButton();
             _.refresh();
         }
@@ -284,7 +300,8 @@ _.refresh = function (selected) {
         dataType: "json",
         url: _.getURL("chDir"),
         data: {
-            dir: _.dir
+            csrf_token: csrfToken,
+            directory: _.dir
         },
         async: false,
         success: function (data) {
