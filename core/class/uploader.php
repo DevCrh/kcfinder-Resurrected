@@ -400,7 +400,7 @@ class uploader
      * verifica un archivo cargado al server
      * correcciones de seguridad mayores
      */
-    protected function checkUploadedFile($aFile = [])
+    protected function checkUploadedFile($aFile = [], $Check_isuploaded = true)
     {
         $config = &$this->config;
         $file = ($aFile === null) ? $this->file : $aFile;
@@ -428,13 +428,16 @@ class uploader
         }
 
         // Verificar si es un archivo subido válido
-        if (!is_uploaded_file($file['tmp_name']))
-            return $this->label("Invalid file upload.");
+        if ($Check_isuploaded) {
+            if (!is_uploaded_file($file['tmp_name'])) {
+                return $this->label("Invalid file upload.");
+            }
+        }
 
         // Protección contra null byte
         if (strpos($file['name'], "\0") !== false) {
             @unlink($file['tmp_name']);
-            return $this->label("Invalid file name.");
+            return $this->label("Invalid file upload.");
         }
 
         // CHECK FOR UPLOAD ERRORS
