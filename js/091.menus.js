@@ -264,7 +264,7 @@ _.menuFile = function (file, e) {
         }
         // DOWNLOAD
         _.menu.addItem("kcact:download", _.label("Download"), function () {
-            $('#menu').html('<form id="downloadForm" method="post" action="' + _.getURL('download') + '"><input type="hidden" name="directory" /><input type="hidden" name="file" /><input type="hidden" name="csrf_token" value="' + csrfToken + '" /></form>');
+            $('#menu').html('<form id="downloadForm" method="post" action="' + _.getURL('download') + '"><input type="hidden" name="dir" /><input type="hidden" name="file" /><input type="hidden" name="csrf_token" value="' + csrfToken + '" /></form>');
             $('#downloadForm input').get(0).value = _.dir;
             $('#downloadForm input').get(1).value = data.name;
             $('#downloadForm').submit();
