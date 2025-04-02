@@ -66,19 +66,20 @@ class session
         /**
          * Csrf protected session
          */
-        $cookie  = isset($_COOKIE['kcCsrf']) ? $_COOKIE['kcCsrf'] : '';
-        $token = isset($_SESSION['kcCsrf']) ? $_SESSION['kcCsrf'] : '';
-        if ($token !== $cookie) {
-            if (!empty($files)) {
-                foreach ($files as $tmpFile) {
-                    if (file_exists($tmpFile)) {
-                        @unlink($tmpFile);
+        if ($config['_sessionCsrf']) {
+            $cookie  = isset($_COOKIE['kcCsrf']) ? $_COOKIE['kcCsrf'] : '';
+            $token = isset($_SESSION['kcCsrf']) ? $_SESSION['kcCsrf'] : '';
+            if ($token !== $cookie) {
+                if (!empty($files)) {
+                    foreach ($files as $tmpFile) {
+                        if (file_exists($tmpFile)) {
+                            @unlink($tmpFile);
+                        }
                     }
                 }
+                die('Not Valid Session Csrf Token');
             }
-            die('Not Valid Session Csrf Token');
         }
-
         // Load session configuration
         foreach ($config as $key => $val)
             $this->config[$key] = ((substr($key, 0, 1) != "_") && isset($session[$key]))
