@@ -100,7 +100,7 @@ _.uploadFile = function (form) {
 
     // Crea un objeto FormData con los datos del formulario para realizar una solicitud AJAX
     var post = new FormData(form);
-    post.append('directory', _.dir);
+    post.append('dir', _.dir);
     $.ajax({
         url: $(form).attr('action'), // URL del formulario
         type: 'POST', // Método HTTP para enviar los datos
@@ -301,7 +301,7 @@ _.refresh = function (selected) {
         url: _.getURL("chDir"),
         data: {
             csrf_token: csrfToken,
-            directory: _.dir
+            dir: _.dir
         },
         async: false,
         success: function (data) {
