@@ -133,6 +133,8 @@ $lang = array(
   "Failed to save image." => "No se pudo guardar la imagen.",
   "Invalid characters in file name." => "Caracteres inválidos en el nombre del archivo.",
   "The file MimeType '{detected_type}' is not allowed." => "El MimeType de archivo '{detected_type}' no está permitido.",
+  "Invalid file upload." => "El archivo cargado no es válido.",
+  "Invalid image file." => "Archivo de imagen invalido.",
   // Jcrop
   "Crop" => "Recortar",
   "Croping file..." => "Recortando Imagen...",
