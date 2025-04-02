@@ -54,7 +54,7 @@ function validateCSRF($token): string | bool
     }
 
     if (!isset($_COOKIE['kcCsrf'])) {
-        return 'CSRF cookie missing';
+        return 'Invalid or missing CSRF token';
     }
 
     // Verifica si el token proporcionado es válido
