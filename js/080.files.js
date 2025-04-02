@@ -1,7 +1,7 @@
 /** 
  *   @desc File related functionality
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -226,6 +226,9 @@ _.returnFile = function (file) {
     }
 };
 
+/**
+ * Retorna el archivo para ser usado por ajax 
+ */
 _.returnFiles = function (files) {
     if (_.opener.callBackMultiple && files.length) {
         var rfiles = [];
