@@ -2,8 +2,8 @@
 
 /** 
  *   @desc This file is included first, before each other
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  *
@@ -39,7 +39,6 @@ require "core/autoload.php";
 // Validar Csrf
 function validateCSRF($token): string | bool
 {
-    //$token = $token + 1;
     // Verifica si el token existe en la sesión
     if (!isset($_SESSION['kcCsrf'])) {
         return 'CSRF token missing in session';
@@ -52,6 +51,10 @@ function validateCSRF($token): string | bool
     // Verifica el token dado por el frontend usuario
     if (empty($token)) {
         return 'CSRF token not provided';
+    }
+
+    if (!isset($_COOKIE['kcCsrf'])) {
+        return 'CSRF cookie missing';
     }
 
     // Verifica si el token proporcionado es válido
