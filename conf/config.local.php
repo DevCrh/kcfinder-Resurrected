@@ -1,25 +1,67 @@
 <?php
 
-// Puerto y la URL del sitio
-define('PROTOCOL', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http"); // Detectar si está en HTTPS o HTTP
-define('HOST', $_SERVER['HTTP_HOST'] === 'localhost' ? 'localhost' : $_SERVER['HTTP_HOST']); // Dominio o host localhost.com tudominio.com
-define('CUR_PAGE', PROTOCOL . '://' . HOST);
-
 /**
- * $valid_domains
- * Configure el dominio autorizado para acceder a kcfinder
- * ej. example.com www.example.com
+ * en: Here you can override the config.php settings
+ * es: Aquí puede sobrescribir la configuración de config.php
  */
-$origin = isset($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER']) : null;
-$valid_domains = array("localhost", "127.0.0.1");
+$_LOCALS = array(
+    // IMAGE SETTINGS
+    'jpegQuality' => 90,
+    'thumbsDir' => ".thumbs",
 
-if (!in_array($origin['host'], $valid_domains)) {
-    //echo sprintf("Origin domain is <b>%s</b>, with the HTTP referrer <b>%s</b><br>", $origin['host'], $_SERVER['HTTP_REFERER']);
-    http_response_code(403);
-    die('Warning, access forbidden!');
-}
+    'maxImageWidth' => 0,
+    'maxImageHeight' => 0,
 
-/**
- * Sobre escriba la configuración de config sin modificar el archivo config
- */
-$_LOCALS = array();
+    'thumbWidth' => 100,
+    'thumbHeight' => 100,
+
+    'watermark' => "",
+    'denyExtensionRename' => true,
+
+    /**
+     * en: Extensions allowed for upload
+     * es: Extensiones permitidas para subir
+     */
+    'allowExts' => "",
+    "allowMimeTypes" => "",
+
+    // MISC SETTINGS
+    'filenameChangeChars' => array(
+        ' ' => "_",
+        ':' => ".",
+        'ñ' => "n",
+        'Ñ' => "N",
+        '-' => "_"
+    ),
+    'dirnameChangeChars' => array(
+        ' ' => "_",
+        ':' => ".",
+        'ñ' => "n",
+        'Ñ' => "N",
+        '-' => "_"
+    ),
+    '_denyExtDomains' => true,
+    '_allowDomains' => array("127.0.0.1", "localhost"),
+    '_sessionCsrf' => true,
+
+    /**
+     * Cookies
+     */
+    'cookieDomain' => "127.0.0.1",
+    'cookiePath' => "/",
+
+    'access' => array(
+        'files' => array(
+            'upload' => false,
+            'delete' => false,
+            'copy'   => false,
+            'move'   => false,
+            'rename' => false
+        ),
+        'dirs' => array(
+            'create' => false,
+            'delete' => false,
+            'rename' => false
+        )
+    ),
+);
