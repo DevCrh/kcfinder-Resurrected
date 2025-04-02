@@ -19,7 +19,7 @@ _.editImage = function (file) {
             url = _.getURL('editimage');
             // Agregar los datos básicos
             data.append('file', file.name);
-            data.append('directory', _.dir);
+            data.append('dir', _.dir);
             data.append('base64', imageInfo.imageBase64);
 
             // Metadatos adicionales
