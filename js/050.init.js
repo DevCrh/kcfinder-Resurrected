@@ -123,7 +123,7 @@ _.initContent = function () {
             _.dirWritable = data.dirWritable;
             $('#folders').html(_.buildTree(data.tree));
             _.setTreeData(data.tree);
-            _.setTitle("KCFinder: /" + _.dir);
+            _.setTitle("KCFinder Resurrected: /" + _.dir);
             _.initFolders();
             _.files = data.files ? data.files : [];
             _.orderFiles();

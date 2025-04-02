@@ -1,7 +1,7 @@
 /** 
  *   @desc Dialog boxes functionality
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -64,7 +64,8 @@ _.dialog = function (title, content, options) {
     var dlg = $('<div></div>');
     dlg.hide().attr('title', title).html(content).appendTo('body');
     if (dlg.find('form').get(0) && !dlg.find('form [type="submit"]').get(0))
-        dlg.find('form').append('<button type="submit" style="width:0;height:0;padding:0;margin:0;border:0;visibility:hidden">Submit</button>');
+        dlg.find('form').append('<input type="hidden" name="csrf_token" value="' + csrfToken + '" />');
+    dlg.find('form').append('<button type="submit" style="width:0;height:0;padding:0;margin:0;border:0;visibility:hidden">Submit</button>');
 
     var o = {
         resizable: false,
@@ -149,6 +150,7 @@ _.fileNameDialog = function (post, inputName, inputValue, url, labels, callBack,
                 return false;
             }
             post[inputName] = name.value;
+            post['csrf_token'] = csrfToken;
             $.ajax({
                 type: "post",
                 dataType: "json",
@@ -214,7 +216,6 @@ _.imageCropDialog = function (post, labels, callBack) {
 
     if (heig > 495)
         heig = 494;
-
     var html = '<div><img onload="loadCrop();" src="' + post.upload + '/' + post.dir + '/' + post.file + '" id="RecortarImagen" class="img"/><br></div>',
         dlg = _.dialog(_.label(labels.title), html, {
             width: weig,
@@ -239,5 +240,56 @@ _.imageCropDialog = function (post, labels, callBack) {
                     }
                 }
             ]
+        });
+}
+
+_.imageEditDialog = function (post, labels, callBack) {
+    var w = $(window),
+        w_w = w.width(),
+        w_h = w.height(),
+        weig = (w_w * 0.9), // Puedes ajustar estos valores
+        heig = (w_h * 0.9);
+    // URL completa de la imagen
+    var imageUrl = post.upload + '/' + post.dir + '/' + post.file;
+    // HTML del editor
+    var html = `<div id="filerobot-editor-container" style="width:100%; height:${heig - 100}px;"></div>`;
+    var dlg = _.dialog(_.label(labels.title), html, {
+        width: weig,
+        height: heig,
+        modal: true,
+        buttons: [{
+            text: _.label("Cancelar"),
+            icons: {
+                primary: "ui-icon-closethick"
+            },
+            click: function () {
+                $(this).dialog('destroy').detach();
+            }
+        }],
+        open: function () {
+            initFilerobotEditor(imageUrl, post.file, callBack);
+        }
+    });
+}
+
+_.viewOfficeDialog = function (post, labels) {
+    var w = $(window),
+        w_w = w.width(),
+        w_h = w.height(),
+        weig = (w_w * .80),
+        heig = (w_h * .95),
+        html = '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' + post + '" width="100%" height="100%"></iframe>',
+        dlg = _.dialog(_.label(labels.title), html, {
+            width: weig,
+            height: heig,
+            buttons: [{
+                text: _.label(labels.button),
+                icons: {
+                    primary: "ui-icon-closethick"
+                },
+                click: function () {
+                    $(this).dialog('destroy').detach();
+                }
+            }]
         });
 }

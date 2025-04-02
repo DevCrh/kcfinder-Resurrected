@@ -1,7 +1,7 @@
 /** 
  *   @desc Folder related functionality
- *   @package KCFinder
- *   @version 3.12
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -97,6 +97,7 @@ _.expandDir = function (dir) {
                     dataType: "json",
                     url: _.getURL("expand"),
                     data: {
+                        csrf_token: csrfToken,
                         dir: path
                     },
                     async: false,
@@ -152,6 +153,7 @@ _.changeDir = function (dir) {
             dataType: "json",
             url: _.getURL("chDir"),
             data: {
+                csrf_token: csrfToken,
                 dir: dir.data('path')
             },
             async: false,

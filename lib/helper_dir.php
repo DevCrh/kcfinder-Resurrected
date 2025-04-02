@@ -87,7 +87,7 @@ class dir
      * @param array $options
      * @return mixed */
 
-    static function content($dir, array $options = null)
+    static function content($dir, array $options = [])
     {
 
         $defaultOptions = array(

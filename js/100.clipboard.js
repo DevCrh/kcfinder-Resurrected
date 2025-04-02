@@ -1,7 +1,7 @@
 /** 
  *   @desc Clipboard functionality
- *   @package KCFinder
- *   @version 3.12
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -73,6 +73,7 @@ _.copyClipboard = function (dir) {
             dataType: "json",
             url: _.getURL("cp_cbd"),
             data: {
+                csrf_token: csrfToken,
                 dir: dir,
                 files: files
             },
@@ -128,6 +129,7 @@ _.moveClipboard = function (dir) {
             dataType: "json",
             url: _.getURL("mv_cbd"),
             data: {
+                csrf_token: csrfToken,
                 dir: dir,
                 files: files
             },
@@ -180,6 +182,7 @@ _.deleteClipboard = function () {
             dataType: "json",
             url: _.getURL("rm_cbd"),
             data: {
+                csrf_token: csrfToken,
                 files: files
             },
             async: false,
@@ -218,6 +221,7 @@ _.downloadClipboard = function () {
             files[i] = _.clipboard[i].dir + "/" + _.clipboard[i].name;
     if (files.length)
         _.post(_.getURL('downloadClipboard'), {
+            csrf_token: csrfToken,
             files: files
         });
 };

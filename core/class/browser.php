@@ -2,16 +2,18 @@
 
 /** 
  *   @desc Browser actions class
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
 
 namespace kcfinder;
 
-use function \PHP81_BC\strftime;
 use Exception;
+use InvalidArgumentException;
+use RuntimeException;
+use function \PHP81_BC\strftime;
 
 class browser extends uploader
 {
@@ -22,7 +24,8 @@ class browser extends uploader
     public function __construct()
     {
         parent::__construct();
-        include('./lib/php-8.1-strftime.php');
+        include('./lib/strftime.php');
+
         // SECURITY CHECK INPUT DIRECTORY
         if (isset($_POST['dir'])) {
             $dir = $this->checkInputDir($_POST['dir'], true, false);
@@ -54,11 +57,7 @@ class browser extends uploader
 
         // Remove temporary zip downloads if exists
         if (!$this->config['disabled']) {
-            $files = dir::content($this->config['uploadDir'], array(
-                'types' => "file",
-                'pattern' => '/^.*\.zip$/i'
-            ));
-
+            $files = dir::content($this->config['uploadDir'], array('types' => "file", 'pattern' => '/^.*\.zip$/i'));
             if (is_array($files) && count($files)) {
                 $time = time();
                 foreach ($files as $file)
@@ -100,7 +99,7 @@ class browser extends uploader
 
         // Render the browser
         if ($act == "browser") {
-            header("X-UA-Compatible: chrome=1");
+            header("X-UA-Compatible: ie=edge");
             header("Content-Type: text/html; charset={$this->charset}");
 
             // Ajax requests
@@ -176,11 +175,22 @@ class browser extends uploader
 
     protected function act_expand()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            die($csrfResp);
+        }
         return json_encode(array('dirs' => $this->getDirs($this->postDir())));
     }
 
     protected function act_chDir()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            die($csrfResp);
+        }
+
         $this->postDir(); // Just for existing check
         $this->session['dir'] = "{$this->type}/{$_POST['dir']}";
         $dirWritable = dir::isWritable("{$this->config['uploadDir']}/{$this->session['dir']}");
@@ -192,12 +202,14 @@ class browser extends uploader
 
     protected function act_newDir()
     {
-        if (
-            !$this->config['access']['dirs']['create'] ||
-            !isset($_POST['dir']) ||
-            !isset($_POST['newDir']) ||
-            !$this->checkFilename($_POST['newDir'])
-        )
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+            die($csrfResp);
+        }
+
+        if (!$this->config['access']['dirs']['create'] || !isset($_POST['dir']) || !isset($_POST['newDir']) || !$this->checkFilename($_POST['newDir']))
             $this->errorMsg("Unknown error.");
 
         $dir = $this->postDir();
@@ -218,37 +230,213 @@ class browser extends uploader
     protected function act_crop()
     {
         try {
-            if (!isset($_POST['file']) || !isset($_POST['dir']) || !isset($_POST['x']) || !isset($_POST['y']) || !isset($_POST['w']) || !isset($_POST['h']))
-                $this->errorMsg("Unknown error.");
+            // Validar Csrf
+            $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+            if ($csrfResp !== true) {
+                throw new Exception($csrfResp);
+            }
 
+            if (!isset($_POST['file']) || !isset($_POST['dir']) || !isset($_POST['x']) || !isset($_POST['y']) || !isset($_POST['w']) || !isset($_POST['h'])) {
+                $this->errorMsg("Missing required parameters.");
+                return false;
+            }
             $quality = $this->config['jpegQuality'];
             $dir = isset($_GET['dir']) ? $this->getDir() : $this->postDir();
+            $dir .= DIRECTORY_SEPARATOR;
+            $dir = str_replace(['\\', '//'], DIRECTORY_SEPARATOR, $dir);
             $src = $dir . $_POST['file'];
-            $nameImg = explode(".", $_POST['file']);
-            if (strtolower($nameImg[1]) == 'jpg' || strtolower($nameImg[1]) == 'jpeg')
-                $img_r = imagecreatefromjpeg($src);
-            else if (strtolower($nameImg[1]) == 'png')
-                $img_r = imagecreatefrompng($src);
-            else
+
+            // Usar generateSafeFilename para manejar el nombre del archivo
+            $fileInfo = pathinfo($_POST['file']);
+            $extension = strtolower($fileInfo['extension'] ?? '');
+
+            // Validar extensión permitida
+            if (!in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                $this->errorMsg("Invalid image format. Only JPG/PNG allowed.");
                 return false;
+            }
+
+            // Cargar imagen según su tipo
+            switch ($extension) {
+                case 'jpg':
+                case 'jpeg':
+                    $img_r = imagecreatefromjpeg($src);
+                    break;
+                case 'png':
+                    $img_r = imagecreatefrompng($src);
+                    break;
+                default:
+                    $this->errorMsg("Unsupported image format.");
+                    return false;
+            }
+
+            if (!$img_r) {
+                $this->errorMsg("Failed to load image.");
+                return false;
+            }
 
             $dst_r = ImageCreateTrueColor($_POST['w'], $_POST['h']);
             imagecopyresampled($dst_r, $img_r, 0, 0, $_POST['x'], $_POST['y'], $_POST['w'], $_POST['h'], $_POST['w'], $_POST['h']);
-            if (strtolower($nameImg[1]) == 'jpg' || strtolower($nameImg[1]) == 'jpeg')
-                imagejpeg($dst_r, $dir . file::getInexistantFilename((substr($nameImg[0], 0, 10) . '_croped.' . $nameImg[1]), $dir), $quality);
-            else if (strtolower($nameImg[1]) == 'png')
-                imagepng($dst_r, $dir . file::getInexistantFilename((substr($nameImg[0], 0, 10) . '_croped.' . $nameImg[1]), $dir), 9);
-            // Remove from memory - don't forget this part
+
+            // Generar nombre seguro para el archivo recortado
+            $croppedFilename = $this->generateSafeFilename($fileInfo['filename'], $extension, '_cropped');
+
+            // Ruta completa del archivo de salida
+            $outputPath = $dir . $croppedFilename;
+
+            // Guardar imagen según su tipo
+            switch ($extension) {
+                case 'jpg':
+                case 'jpeg':
+                    if (!imagejpeg($dst_r, $outputPath, $quality)) {
+                        throw new Exception("Failed to save image.");
+                    }
+                    break;
+                case 'png':
+                    if (!imagepng($dst_r, $outputPath, 9)) {
+                        throw new Exception("Failed to save image.");
+                    }
+                    break;
+            }
+            // Liberar memoria
             imagedestroy($dst_r);
-            return true;
+            imagedestroy($img_r);
+            return json_encode([
+                'status' => 'success',
+                'message' => 'Image cropped successfully',
+                'newFile' => $croppedFilename
+            ]);
         } catch (Exception $e) {
-            error_log($e->getMessage());
-            $this->errorMsg("Unknown error.");
+            $this->errorMsg("{$e->getMessage()}");
+            return json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    protected function act_editimage()
+    {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
+        try {
+            // Obtener datos del formulario
+            $directory = $_POST['dir'] ?? '';
+            $fileName = $_POST['file'] ?? '';
+            $extension = strtolower($_POST['ext'] ?? 'jpg');
+            $quality = 95; // Calidad máxima para JPEG (95 es el punto óptimo calidad/tamaño)
+
+            // Validaciones básicas
+            if (empty($fileName)) {
+                $this->errorMsg("Missing required parameters.");
+            }
+
+            // Construir ruta
+            $dir = isset($_GET['dir']) ? $this->getDir() : $this->postDir();
+            $dir .= DIRECTORY_SEPARATOR;
+            $dir = str_replace(['\\', '//'], DIRECTORY_SEPARATOR, $dir);
+            $fullPath = rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+            // Verificar directorio
+            if (!file_exists($fullPath)) {
+                throw new Exception("Non-existing directory type.");
+            }
+
+            // Procesar solo base64 (eliminé el blob para simplificar)
+            if (!isset($_POST['base64'])) {
+                throw new Exception("Only base64 images are accepted");
+            }
+
+            // Decodificar imagen
+            $base64 = $_POST['base64'];
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+
+            if ($imageData === false) {
+                throw new Exception("Error decoding base64");
+            }
+
+            // Generar nombre seguro
+            $newFileName = $this->generateSafeFilename($fileName, $extension, '_edited');
+            $filePath = $fullPath . $newFileName;
+
+            // Guardar según el formato con máxima calidad
+            switch ($extension) {
+                case 'jpg':
+                case 'jpeg':
+                    // Guardar directamente el JPEG con máxima calidad
+                    file_put_contents($filePath, $imageData);
+
+                    // Re-comprimir con calidad controlada (opcional)
+                    $image = @imagecreatefromstring($imageData);
+                    if ($image !== false) {
+                        imagejpeg($image, $filePath, $quality);
+                        imagedestroy($image);
+                    }
+                    break;
+
+                case 'png':
+                    // PNG sin compresión (máxima calidad)
+                    file_put_contents($filePath, $imageData);
+
+                    // Optimizar PNG (opcional)
+                    $image = @imagecreatefromstring($imageData);
+                    if ($image !== false) {
+                        imagesavealpha($image, true);
+                        imagepng($image, $filePath, 0); // 0 = sin compresión
+                        imagedestroy($image);
+                    }
+                    break;
+
+                case 'webp':
+                    // WEBP con máxima calidad
+                    $image = @imagecreatefromstring($imageData);
+                    if ($image !== false) {
+                        imagewebp($image, $filePath, 100); // 100 = máxima calidad
+                        imagedestroy($image);
+                    } else {
+                        throw new Exception("Failed to save image.");
+                    }
+                    break;
+
+                default:
+                    throw new Exception("Unsupported image format.");
+            }
+
+            // Verificar que se guardó correctamente
+            if (!file_exists($filePath)) {
+                throw new Exception("Failed to save image.");
+            }
+
+            return json_encode([
+                'status' => 'success',
+                'message' => 'Imagen guardada con máxima calidad',
+                'newPath' => str_replace('\\', '/', $directory . '/' . $newFileName),
+                'fileName' => $newFileName,
+                'fileSize' => filesize($filePath) // Para debug
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en act_editimage: " . $e->getMessage());
+            $this->errorMsg("{$e->getMessage()}");
+            return json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
         }
     }
 
     protected function act_renameDir()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         if (
             !$this->config['access']['dirs']['rename'] ||
             !isset($_POST['dir']) ||
@@ -276,11 +464,13 @@ class browser extends uploader
 
     protected function act_deleteDir()
     {
-        if (
-            !$this->config['access']['dirs']['delete'] ||
-            !isset($_POST['dir']) ||
-            !strlen(rtrim(rtrim(trim($_POST['dir']), "/"), "\\"))
-        )
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
+        if (!$this->config['access']['dirs']['delete'] || !isset($_POST['dir']) || !strlen(rtrim(rtrim(trim($_POST['dir']), "/"), "\\")))
             $this->errorMsg("Unknown error.");
 
         $dir = $this->postDir();
@@ -301,6 +491,11 @@ class browser extends uploader
     protected function act_upload()
     {
         header("Content-Type: text/plain; charset={$this->charset}");
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
 
         if (!$this->config['access']['files']['upload'] || (!isset($_POST['dir']) && !isset($_GET['dir'])))
             $this->errorMsg("Unknown error.");
@@ -326,12 +521,13 @@ class browser extends uploader
 
     protected function act_dragUrl()
     {
-        if (
-            !$this->config['access']['files']['upload'] ||
-            !isset($_GET['dir']) ||
-            !isset($_POST['url']) ||
-            !isset($_POST['type'])
-        )
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
+        if (!$this->config['access']['files']['upload'] || !isset($_GET['dir']) || !isset($_POST['url']) || !isset($_POST['type']))
             $this->errorMsg("Unknown error.");
 
         $dir = $this->getDir();
@@ -339,17 +535,36 @@ class browser extends uploader
         if (!dir::isWritable($dir))
             $this->errorMsg("Cannot access or write to upload folder.");
 
-        if (is_array($_POST['url']))
-            foreach ($_POST['url'] as $url)
-                $this->downloadURL($url, $dir);
-        else
-            $this->downloadURL($_POST['url'], $dir);
+        if (is_array($_POST['url'])) {
+            foreach ($_POST['url'] as $url) {
+                $save = $this->downloadURL($url, $dir);
+                if (!is_array($save))
+                    $this->errorMsg("Unknown error.");
 
+                if ($save['status'] == 'error') {
+                    $this->errorMsg($save['msg']);
+                }
+            }
+        } else {
+            $save = $this->downloadURL($_POST['url'], $dir);
+            if (!is_array($save))
+                $this->errorMsg("Unknown error.");
+
+            if ($save['status'] == 'error') {
+                $this->errorMsg($save['msg']);
+            }
+        }
         return true;
     }
 
     protected function act_download()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !isset($_POST['dir']) ||
@@ -374,6 +589,12 @@ class browser extends uploader
 
     protected function act_rename()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !$this->config['access']['files']['rename'] ||
@@ -422,6 +643,12 @@ class browser extends uploader
 
     protected function act_delete()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !$this->config['access']['files']['delete'] ||
@@ -441,6 +668,12 @@ class browser extends uploader
 
     protected function act_cp_cbd()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !$this->config['access']['files']['copy'] ||
@@ -495,6 +728,12 @@ class browser extends uploader
 
     protected function act_mv_cbd()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !$this->config['access']['files']['move'] ||
@@ -549,12 +788,13 @@ class browser extends uploader
 
     protected function act_rm_cbd()
     {
-        if (
-            !$this->config['access']['files']['delete'] ||
-            !isset($_POST['files']) ||
-            !is_array($_POST['files']) ||
-            !count($_POST['files'])
-        )
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
+        if (!$this->config['access']['files']['delete'] || !isset($_POST['files']) || !is_array($_POST['files']) || !count($_POST['files']))
             $this->errorMsg("Unknown error.");
 
         $error = array();
@@ -584,6 +824,12 @@ class browser extends uploader
 
     protected function act_downloadDir()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (!isset($_POST['dir']) || $this->config['denyZipDownload'])
             $this->errorMsg("Unknown error.");
@@ -603,6 +849,12 @@ class browser extends uploader
 
     protected function act_downloadSelected()
     {
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
         $dir = $this->postDir();
         if (
             !isset($_POST['dir']) ||
@@ -645,11 +897,13 @@ class browser extends uploader
 
     protected function act_downloadClipboard()
     {
-        if (
-            !isset($_POST['files']) ||
-            !is_array($_POST['files']) ||
-            $this->config['denyZipDownload']
-        )
+        // Validar Csrf
+        $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
+        if ($csrfResp !== true) {
+            $this->errorMsg($csrfResp);
+        }
+
+        if (!isset($_POST['files']) || !is_array($_POST['files']) || $this->config['denyZipDownload'])
             $this->errorMsg("Unknown error.");
 
         $zipFiles = array();
@@ -687,38 +941,110 @@ class browser extends uploader
         die;
     }
 
-    protected function moveUploadFile($file, $dir)
+    /**
+     * mostrar errores
+     */
+    protected function errorMsg($message, $data = [])
     {
-        $message = $this->checkUploadedFile($file);
-
-        if ($message !== true) {
-            if (isset($file['tmp_name']))
-                @unlink($file['tmp_name']);
-            return "{$file['name']}: $message";
+        if (in_array($this->action, array("thumb", "upload", "download", "downloadDir")))
+            die($this->label($message, $data));
+        if (($this->action === null) || ($this->action == "browser"))
+            $this->backMsg($message, $data);
+        else {
+            $message = $this->label($message, $data);
+            die(json_encode(array('error' => $message)));
         }
-
-        $filename = $this->normalizeFilename($file['name']);
-        //$target = "$dir/" . file::getInexistantFilename($filename, $dir);
-        if (isset($this->config['_appendUniqueSuffixOnOverwrite']) && $this->config['_appendUniqueSuffixOnOverwrite']) {
-            $filename = file::getInexistantFilename($filename, $dir);
-        }
-        $target = "$dir/$filename";
-
-        if (
-            !@move_uploaded_file($file['tmp_name'], $target) &&
-            !@rename($file['tmp_name'], $target) &&
-            !@copy($file['tmp_name'], $target)
-        ) {
-            @unlink($file['tmp_name']);
-            return $this->htmlData($file['name']) . ": " . $this->label("Cannot move uploaded file to target folder.");
-        } elseif (function_exists('chmod'))
-            chmod($target, $this->config['filePerms']);
-
-        $this->makeThumb($target);
-        return "/" . basename($target);
     }
 
-    protected function sendDefaultThumb($file = null)
+    protected function htmlData($str)
+    {
+        return htmlentities($str, 0, strtoupper($this->charset));
+    }
+
+    /**
+     * Obtener iodomas de la aplicacion
+     */
+    protected function getLangs()
+    {
+        if (isset($this->session['langs']))
+            return $this->session['langs'];
+
+        $files = dir::content("lang", array(
+            'pattern' => '/^[a-z]{2,3}(\-[a-z]{2})?\.php$/',
+            'types' => "file"
+        ));
+
+        $langs = array();
+        if (is_array($files))
+            foreach ($files as $file) {
+                include $file;
+                $id = substr(basename($file), 0, -4);
+                $langs[$id] = isset($lang['_native'])
+                    ? $lang['_native']
+                    : (isset($lang['_lang'])
+                        ? $lang['_lang']
+                        : $id);
+            }
+
+        $this->session['langs'] = $langs;
+        return $langs;
+    }
+
+    //^-------------------------------------------------------------------
+    //^ ---------------   Métodos Privados  ------------------------------
+    //^-------------------------------------------------------------------
+    //! funcion output extremadamente insegura
+    /*protected function output($data = null, $template = null)
+    {
+        if (!is_array($data)) $data = array();
+        if ($template === null)
+            $template = $this->action;
+
+        if (file_exists("tpl/tpl_$template.php")) {
+            ob_start();
+            $eval = "unset(\$data);unset(\$template);unset(\$eval);";
+            $_ = $data;
+            foreach (array_keys($data) as $key)
+                if (preg_match('/^[a-z\d_]+$/i', $key))
+                    $eval .= "\$$key=\$_['$key'];";
+            $eval .= "unset(\$_);require \"tpl/tpl_$template.php\";";
+            eval($eval);
+            return ob_get_clean();
+        }
+
+        return "";
+    }*/
+
+    /**
+     * Motor de plantillas con seguridad mejorada
+     */
+    private function output($data = [], $template = null)
+    {
+        if ($template === null) {
+            $template = $this->action;
+        }
+        // Validación estricta del nombre de plantilla
+        if (!preg_match('/^[a-z0-9_\-]+$/i', $template)) {
+            throw new InvalidArgumentException("Invalid template name");
+        }
+        $templatePath = "tpl/tpl_$template.php";
+        // Verificación segura de ruta
+        $realBase = realpath('tpl');
+        $realPath = realpath($templatePath);
+        if ($realPath === false || strpos($realPath, $realBase) !== 0) {
+            throw new RuntimeException("Template not found");
+        }
+        if (!file_exists($realPath)) {
+            return "";
+        }
+        // Extracción segura de variables
+        extract($data, EXTR_SKIP); // EXTR_SKIP evita sobrescritura
+        ob_start();
+        include $realPath;
+        return ob_get_clean();
+    }
+
+    private function sendDefaultThumb($file = null)
     {
         if ($file !== null) {
             $ext = file::getExtension($file);
@@ -731,7 +1057,32 @@ class browser extends uploader
         die;
     }
 
-    protected function getFiles($dir)
+    protected function moveUploadFile($file, $dir)
+    {
+        $message = $this->checkUploadedFile($file);
+        if ($message !== true) {
+            if (isset($file['tmp_name']))
+                @unlink($file['tmp_name']);
+            return "{$file['name']}: $message";
+        }
+
+        $filename = $this->normalizeFilename($file['name']);
+        if (isset($this->config['_appendUniqueSuffixOnOverwrite']) && $this->config['_appendUniqueSuffixOnOverwrite']) {
+            $filename = file::getInexistantFilename($filename, $dir);
+        }
+        $target = "$dir/$filename";
+
+        if (!@move_uploaded_file($file['tmp_name'], $target) && !@rename($file['tmp_name'], $target) && !@copy($file['tmp_name'], $target)) {
+            @unlink($file['tmp_name']);
+            return $this->htmlData($file['name']) . ": " . $this->label("Cannot move uploaded file to target folder.");
+        } elseif (function_exists('chmod'))
+            chmod($target, $this->config['filePerms']);
+
+        $this->makeThumb($target);
+        return "/" . basename($target);
+    }
+
+    private function getFiles($dir)
     {
         $thumbDir = "{$this->config['uploadDir']}/{$this->config['thumbsDir']}/$dir";
         $dir = "{$this->config['uploadDir']}/$dir";
@@ -790,10 +1141,9 @@ class browser extends uploader
         return $return;
     }
 
-    protected function getTree($dir, $index = 0)
+    private function getTree($dir, $index = 0)
     {
         $path = explode("/", $dir);
-
         $pdir = "";
         for ($i = 0; ($i <= $index && $i < count($path)); $i++)
             $pdir .= "/{$path[$i]}";
@@ -801,7 +1151,6 @@ class browser extends uploader
             $pdir = substr($pdir, 1);
 
         $fdir = "{$this->config['uploadDir']}/$pdir";
-
         $dirs = $this->getDirs($fdir);
 
         if (is_array($dirs) && count($dirs) && ($index <= count($path) - 1)) {
@@ -827,31 +1176,36 @@ class browser extends uploader
         return $dirs;
     }
 
-    protected function postDir($existent = true)
+    private function postDir($existent = true)
     {
         $dir = $this->typeDir;
         if (isset($_POST['dir']))
-            $dir .= "/" . $_POST['dir'];
+            $dir .= DIRECTORY_SEPARATOR . $_POST['dir'];
+
         if (!$this->checkFilePath($dir))
             $this->errorMsg("Unknown error.");
+
         if ($existent && (!is_dir($dir) || !is_readable($dir)))
             $this->errorMsg("Inexistant or inaccessible folder.");
+
         return $dir;
     }
 
-    protected function getDir($existent = true)
+    private function getDir($existent = true)
     {
         $dir = $this->typeDir;
         if (isset($_GET['dir']))
             $dir .= "/" . $_GET['dir'];
+
         if (!$this->checkFilePath($dir))
             $this->errorMsg("Unknown error.");
         if ($existent && (!is_dir($dir) || !is_readable($dir)))
             $this->errorMsg("Inexistant or inaccessible folder.");
+
         return $dir;
     }
 
-    protected function getDirs($dir)
+    private function getDirs($dir)
     {
         $dirs = dir::content($dir, array('types' => "dir"));
         $return = array();
@@ -867,7 +1221,7 @@ class browser extends uploader
         return $return;
     }
 
-    protected function getDirInfo($dir, $removable = false)
+    private function getDirInfo($dir, $removable = false)
     {
         if ((substr(basename($dir), 0, 1) == ".") || !is_dir($dir) || !is_readable($dir))
             return false;
@@ -895,92 +1249,52 @@ class browser extends uploader
         return $info;
     }
 
-    protected function output($data = null, $template = null)
+    private function downloadURL($url, $dir)
     {
-        if (!is_array($data)) $data = array();
-        if ($template === null)
-            $template = $this->action;
-
-        if (file_exists("tpl/tpl_$template.php")) {
-            ob_start();
-            $eval = "unset(\$data);unset(\$template);unset(\$eval);";
-            $_ = $data;
-            foreach (array_keys($data) as $key)
-                if (preg_match('/^[a-z\d_]+$/i', $key))
-                    $eval .= "\$$key=\$_['$key'];";
-            $eval .= "unset(\$_);require \"tpl/tpl_$template.php\";";
-            eval($eval);
-            return ob_get_clean();
-        }
-
-        return "";
-    }
-
-    protected function errorMsg($message, array $data = null)
-    {
-        if (in_array($this->action, array("thumb", "upload", "download", "downloadDir")))
-            die($this->label($message, $data));
-        if (($this->action === null) || ($this->action == "browser"))
-            $this->backMsg($message, $data);
-        else {
-            $message = $this->label($message, $data);
-            die(json_encode(array('error' => $message)));
-        }
-    }
-
-    protected function htmlData($str)
-    {
-        return htmlentities($str, 0, strtoupper($this->charset));
-    }
-
-    protected function downloadURL($url, $dir)
-    {
-
         if (!preg_match(phpGet::$urlExpr, $url, $match))
             return;
 
         if ((isset($match[7]) && strlen($match[7])))
             $furl = explode("&", $match[7]);
 
-        $filename = isset($furl)
-            ? basename($furl[0])
-            : "web_image.jpg";
-
+        $filename = isset($furl) ? basename($furl[0]) : "web_image.jpg";
         $file = tempnam(sys_get_temp_dir(), $filename);
 
-        if (phpGet::get($url, $file))
-            $this->moveUploadFile(array(
-                'name' => $filename,
-                'tmp_name' => $file,
-                'error' => UPLOAD_ERR_OK
-            ), $dir);
-        else
+        if (phpGet::get($url, $file)) {
+            return $this->moveDownloadFileDrag(array('name' => $filename, 'tmp_name' => $file, 'error' => UPLOAD_ERR_OK), $dir, false);
+        } else {
             @unlink($file);
+            return ['status' => "error", 'msg' => "Failed to save image."];
+        }
     }
 
-    protected function getLangs()
+    private function moveDownloadFileDrag($file, $dir, $check_is_uploaded)
     {
-        if (isset($this->session['langs']))
-            return $this->session['langs'];
-
-        $files = dir::content("lang", array(
-            'pattern' => '/^[a-z]{2,3}(\-[a-z]{2})?\.php$/',
-            'types' => "file"
-        ));
-
-        $langs = array();
-        if (is_array($files))
-            foreach ($files as $file) {
-                include $file;
-                $id = substr(basename($file), 0, -4);
-                $langs[$id] = isset($lang['_native'])
-                    ? $lang['_native']
-                    : (isset($lang['_lang'])
-                        ? $lang['_lang']
-                        : $id);
+        try {
+            $message = $this->checkUploadedFile($file, $check_is_uploaded);
+            if ($message !== true) {
+                if (isset($file['tmp_name']))
+                    @unlink($file['tmp_name']);
+                return ['status' => "error", 'msg' => $message];
             }
 
-        $this->session['langs'] = $langs;
-        return $langs;
+            $filename = $this->normalizeFilename($file['name']);
+            if (isset($this->config['_appendUniqueSuffixOnOverwrite']) && $this->config['_appendUniqueSuffixOnOverwrite']) {
+                $filename = file::getInexistantFilename($filename, $dir);
+            }
+            $target = "$dir/$filename";
+
+            if (!@move_uploaded_file($file['tmp_name'], $target) && !@rename($file['tmp_name'], $target) && !@copy($file['tmp_name'], $target)) {
+                @unlink($file['tmp_name']);
+                return ['status' => "error", 'msg' => "Cannot move uploaded file to target folder."];
+            } elseif (function_exists('chmod'))
+                chmod($target, $this->config['filePerms']);
+
+            $this->makeThumb($target);
+            return ['status' => "success", 'msg' => "ok"];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return ['status' => "error", 'msg' => "Failed to save image."];
+        }
     }
 }

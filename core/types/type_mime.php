@@ -1,18 +1,20 @@
 <?php
 
 /** 
-  *   @desc MIME type detection class
-  *   @package KCFinder
-  *   @version 3.12
-  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
-  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
-  */
+ *   @desc MIME type detection class
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
+ *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
+ *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
+ */
 
 namespace kcfinder;
 
-class type_mime {
+class type_mime
+{
 
-    public function checkFile($file, array $config) {
+    public function checkFile($file, array $config)
+    {
         if (!class_exists("finfo"))
             return "Fileinfo PECL extension is missing.";
 
@@ -31,12 +33,12 @@ class type_mime {
         $mimes = $config['params'];
         if (substr($mimes, 0, 1) == "!") {
             $mimes = trim(substr($mimes, 1));
-            return in_array($type , explode(" ", $mimes))
+            return in_array($type, explode(" ", $mimes))
                 ? "You can't upload such files."
                 : true;
         }
 
-        return !in_array($type , explode(" ", $mimes))
+        return !in_array($type, explode(" ", $mimes))
             ? "You can't upload such files."
             : true;
     }

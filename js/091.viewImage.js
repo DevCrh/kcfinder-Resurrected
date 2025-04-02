@@ -1,7 +1,7 @@
 /** 
  *   @desc Image viewer
- *   @package KCFinder
- *   @version 3.20
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */

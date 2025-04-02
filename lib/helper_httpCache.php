@@ -22,7 +22,7 @@ class httpCache
      * @param integer $expire
      * @param array $headers */
 
-    static function file($file, $type = '', $expire = null, array $headers = null)
+    static function file($file, $type = '', $expire = null, array $headers = [])
     {
         $mtime = @filemtime($file);
         if ($mtime !== false) self::checkMTime($mtime);
@@ -43,7 +43,7 @@ class httpCache
      * @param array $headers
      * @param bool $checkMTime */
 
-    static function content($content, $mtime, $type = null, $expire = null, array $headers = null, $checkMTime = true)
+    static function content($content, $mtime, $type = null, $expire = null, array $headers = [], $checkMTime = true)
     {
         if ($checkMTime) self::checkMTime($mtime);
         if ($type === null) $type = self::DEFAULT_TYPE;

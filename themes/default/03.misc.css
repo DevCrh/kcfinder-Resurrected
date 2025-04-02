@@ -277,6 +277,9 @@ a.denied:hover {
     background-image: url(img/icons/crop.png);
 }
 
+#menu a[href="kcact:edit"] span {
+    background-image: url(img/icons/edit.png);
+}
 
 #menu a[href="kcact:refresh"] span {
     background-image: url(img/icons/refresh.png);

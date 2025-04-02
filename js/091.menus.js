@@ -1,7 +1,7 @@
 /** 
  *   @desc Context menus
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -122,6 +122,7 @@ _.menuFile = function (file, e) {
                         pfiles[i] = $(cfile).data('name');
                     });
                     _.post(_.getURL('downloadSelected'), {
+                        csrf_token: csrfToken,
                         dir: _.dir,
                         files: pfiles
                     });
@@ -183,6 +184,7 @@ _.menuFile = function (file, e) {
                         dataType: "json",
                         url: _.getURL("rm_cbd"),
                         data: {
+                            csrf_token: csrfToken,
                             files: dfiles
                         },
                         async: false,
@@ -255,10 +257,14 @@ _.menuFile = function (file, e) {
             _.menu.addItem("kcact:crop", _.label("Crop"), function () {
                 _.cropImage(data);
             });
+
+            _.menu.addItem("kcact:edit", _.label("EditImg"), function () {
+                _.editImage(data);
+            });
         }
         // DOWNLOAD
         _.menu.addItem("kcact:download", _.label("Download"), function () {
-            $('#menu').html('<form id="downloadForm" method="post" action="' + _.getURL('download') + '"><input type="hidden" name="dir" /><input type="hidden" name="file" /></form>');
+            $('#menu').html('<form id="downloadForm" method="post" action="' + _.getURL('download') + '"><input type="hidden" name="dir" /><input type="hidden" name="file" /><input type="hidden" name="csrf_token" value="' + csrfToken + '" /></form>');
             $('#downloadForm input').get(0).value = _.dir;
             $('#downloadForm input').get(1).value = data.name;
             $('#downloadForm').submit();
@@ -293,6 +299,7 @@ _.menuFile = function (file, e) {
             _.menu.addItem("kcact:mv", _.label("Rename..."), function () {
                 if (!data.writable) return false;
                 _.fileNameDialog({
+                        csrf_token: csrfToken,
                         dir: _.dir,
                         file: data.name
                     },
@@ -318,6 +325,7 @@ _.menuFile = function (file, e) {
                             dataType: "json",
                             url: _.getURL("delete"),
                             data: {
+                                csrf_token: csrfToken,
                                 dir: _.dir,
                                 file: data.name
                             },
@@ -386,6 +394,7 @@ _.menuDir = function (dir, e) {
         _.menu.addDivider();
         _.menu.addItem("kcact:download", _.label("Download"), function () {
             _.post(_.getURL("downloadDir"), {
+                csrf_token: csrfToken,
                 dir: data.path
             });
             return false;
@@ -463,7 +472,8 @@ _.menuDir = function (dir, e) {
                         dataType: "json",
                         url: _.getURL("deleteDir"),
                         data: {
-                            dir: data.path
+                            dir: data.path,
+                            csrf_token: csrfToken
                         },
                         async: false,
                         success: function (data) {
@@ -524,9 +534,9 @@ _.openClipboard = function () {
         $.each(_.clipboard, function (i, val) {
             var icon = $.$.getFileExtension(val.name);
             if (val.thumb)
-            icon = "_image";
+                icon = "_image";
             else if (!val.smallIcon || !icon.length)
-            icon = "_";
+                icon = "_";
             icon = "themes/" + _.theme + "/img/files/small/" + icon + ".png";
             html += '<a title="' + _.label("Click to remove from the Clipboard") + '" onclick="_.removeFromClipboard(' + i + ')"' + ((i == 0) ? ' class="first"' : "") + '><span style="background-image:url(' + $.$.escapeDirs(icon) + ')">' + $.$.htmlData($.$.basename(val.name)) + '</span></a>';
         });

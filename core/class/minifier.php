@@ -2,8 +2,8 @@
 
 /** 
  *   @desc Minify JS & CSS
- *   @package KCFinder
- *   @version 3.12
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -37,11 +37,7 @@ class minifier
             $dir = dirname($_SERVER['SCRIPT_FILENAME']);
 
         // MODIFICATION TIME FILES
-        $mtFiles = array(
-            __FILE__,
-            $_SERVER['SCRIPT_FILENAME'],
-            "conf/config.php"
-        );
+        $mtFiles = array(__FILE__, $_SERVER['SCRIPT_FILENAME'], "conf/config.php");
 
         // GET SOURCE CODE FILES
         $files = dir::content($dir, array(

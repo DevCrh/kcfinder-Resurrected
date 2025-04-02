@@ -1,3 +1,15 @@
+4.00-test1: 2025-04-01
+* Agregado CSRF Token a todos los endpoint de core/browser.php
+* Agregado CSRF Token a core/uploader.php
+* Algunos problemas de seguridad importantes resueltos
+* Agregado editor de imágenes subidas Filerobot
+* Mejoras en verificación de archivos subidos
+* JQuery actualizado a v3.7.1
+* Agregado ejemplo de para la nueva integración (index.php)
+* Mejoras en dragupload desde sitios externos
+* Múltiples mejoras de código
+* Eliminación de código obsoleto JS y referencias a navegadores descontinuados
+
 3.80-test1: 2023-05-07
 * jQuery y jQuery Ui actualizados a la ultima version
 * Cambios en el manejo de extensiones
