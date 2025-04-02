@@ -1,3 +1,12 @@
+4.00-test1: 2025-04-01
+* Problemas de seguridad importantes resueltos
+* agregado CSRF real y funcional
+* agregado editor de iamgenes filerobot
+* mejoras en verificacion de arcgivos subidos
+* JQuery actualizado a v3.7.1
+* Agregado ejemplo de integración
+* mejoras en dragupload desde imagen web
+
 3.80-test1: 2023-05-07
 * jQuery y jQuery Ui actualizados a la ultima version
 * Cambios en el manejo de extensiones
