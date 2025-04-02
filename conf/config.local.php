@@ -47,7 +47,7 @@ $_LOCALS = array(
      * 
      */
     'allowExts' => "",
-    
+
     /**
      * ------- Parámetro 'allowMimeTypes' ---------------------------- 
      * es:
