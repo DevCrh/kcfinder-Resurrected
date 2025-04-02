@@ -40,7 +40,8 @@ class browser extends uploader
         }
 
         $thumbsDir = $this->config['uploadDir'] . "/" . $this->config['thumbsDir'];
-        if (!$this->config['disabled'] &&
+        if (
+            !$this->config['disabled'] &&
             (
                 (!is_dir($thumbsDir) && !@mkdir($thumbsDir, $this->config['dirPerms'])) ||
                 !is_readable($thumbsDir) || !dir::isWritable($thumbsDir) ||
@@ -315,9 +316,6 @@ class browser extends uploader
         }
     }
 
-    /**
-     * Guarda una imagen editada con filerobot
-     */
     protected function act_editimage()
     {
         // Validar Csrf
@@ -334,7 +332,7 @@ class browser extends uploader
             $quality = 95; // Calidad máxima para JPEG (95 es el punto óptimo calidad/tamaño)
 
             // Validaciones básicas
-            if (empty($directory) || empty($fileName)) {
+            if (empty($fileName)) {
                 $this->errorMsg("Missing required parameters.");
             }
 
@@ -537,12 +535,25 @@ class browser extends uploader
         if (!dir::isWritable($dir))
             $this->errorMsg("Cannot access or write to upload folder.");
 
-        if (is_array($_POST['url']))
-            foreach ($_POST['url'] as $url)
-                $this->downloadURL($url, $dir);
-        else
-            $this->downloadURL($_POST['url'], $dir);
+        if (is_array($_POST['url'])) {
+            foreach ($_POST['url'] as $url) {
+                $save = $this->downloadURL($url, $dir);
+                if (!is_array($save))
+                    $this->errorMsg("Unknown error.");
 
+                if ($save['status'] == 'error') {
+                    $this->errorMsg($save['msg']);
+                }
+            }
+        } else {
+            $save = $this->downloadURL($_POST['url'], $dir);
+            if (!is_array($save))
+                $this->errorMsg("Unknown error.");
+
+            if ($save['status'] == 'error') {
+                $this->errorMsg($save['msg']);
+            }
+        }
         return true;
     }
 
@@ -1249,9 +1260,41 @@ class browser extends uploader
         $filename = isset($furl) ? basename($furl[0]) : "web_image.jpg";
         $file = tempnam(sys_get_temp_dir(), $filename);
 
-        if (phpGet::get($url, $file))
-            $this->moveUploadFile(array('name' => $filename, 'tmp_name' => $file, 'error' => UPLOAD_ERR_OK), $dir);
-        else
+        if (phpGet::get($url, $file)) {
+            return $this->moveDownloadFileDrag(array('name' => $filename, 'tmp_name' => $file, 'error' => UPLOAD_ERR_OK), $dir, false);
+        } else {
             @unlink($file);
+            return ['status' => "error", 'msg' => "Failed to save image."];
+        }
+    }
+
+    private function moveDownloadFileDrag($file, $dir, $check_is_uploaded)
+    {
+        try {
+            $message = $this->checkUploadedFile($file, $check_is_uploaded);
+            if ($message !== true) {
+                if (isset($file['tmp_name']))
+                    @unlink($file['tmp_name']);
+                return ['status' => "error", 'msg' => $message];
+            }
+
+            $filename = $this->normalizeFilename($file['name']);
+            if (isset($this->config['_appendUniqueSuffixOnOverwrite']) && $this->config['_appendUniqueSuffixOnOverwrite']) {
+                $filename = file::getInexistantFilename($filename, $dir);
+            }
+            $target = "$dir/$filename";
+
+            if (!@move_uploaded_file($file['tmp_name'], $target) && !@rename($file['tmp_name'], $target) && !@copy($file['tmp_name'], $target)) {
+                @unlink($file['tmp_name']);
+                return ['status' => "error", 'msg' => "Cannot move uploaded file to target folder."];
+            } elseif (function_exists('chmod'))
+                chmod($target, $this->config['filePerms']);
+
+            $this->makeThumb($target);
+            return ['status' => "success", 'msg' => "ok"];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return ['status' => "error", 'msg' => "Failed to save image."];
+        }
     }
 }
