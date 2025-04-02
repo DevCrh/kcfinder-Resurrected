@@ -16,11 +16,9 @@
  *        array. It's recommended to use constants instead.
  */
 
-
 // PHP VERSION CHECK
 if (!preg_match('/^(\d+\.\d+)/', PHP_VERSION, $ver) || ($ver[1] < 7.4))
     die("You are using PHP " . PHP_VERSION . " when KCFinder require at least version 7.4! Some systems has an option to change the active PHP version. Please refer to your hosting provider or upgrade your PHP distribution.");
-
 
 // SAFE MODE CHECK
 if (ini_get("safe_mode") && strtolower(ini_get("safe_mode")) !== 'off')
@@ -37,6 +35,37 @@ if (isset($_GET['cms']) &&
 
 // REGISTER AUTOLOAD FUNCTION
 require "core/autoload.php";
+
+// Validar Csrf
+function validateCSRF($token): string | bool
+{
+    //$token = $token + 1;
+    // Verifica si el token existe en la sesión
+    if (!isset($_SESSION['kcCsrf'])) {
+        return 'CSRF token missing in session';
+    }
+
+    if (empty($_SESSION['kcCsrf'])) {
+        return 'CSRF token missing in session';
+    }
+
+    // Verifica el token dado por el frontend usuario
+    if (empty($token)) {
+        return 'CSRF token not provided';
+    }
+
+    // Verifica si el token proporcionado es válido
+    if (strcmp($_SESSION['kcCsrf'], $token) !== 0) {
+        return 'Invalid or missing CSRF token';
+    }
+
+    // Verifica el token en la cookie
+    if (strcmp($_SESSION['kcCsrf'], $_COOKIE['kcCsrf']) !== 0) {
+        return 'Invalid CSRF token';
+    }
+
+    return true;
+}
 
 // json_encode() IMPLEMENTATION IF JSON EXTENSION IS MISSING
 if (!function_exists("json_encode")) {
