@@ -1,7 +1,7 @@
 /** 
  *   @desc Image Crop
- *   @package KCFinder
- *   @version 3.80
+ *   @package kcfinder-Resurrected
+ *   @version 4.0
  *   @license http://opensource.org/licenses/GPL-3.0 GPLv3
  *   @license http://opensource.org/licenses/LGPL-3.0 LGPLv3
  */
@@ -23,6 +23,8 @@ _.cropImage = function (file) {
             data.append('y', size.y);
             data.append('w', size.w);
             data.append('h', size.h);
+            // Token csrf
+            data.append('csrf_token', csrfToken);
             $.ajax({
                 type: "post",
                 url: url,
@@ -35,14 +37,13 @@ _.cropImage = function (file) {
                     $('#loading').html(_.label("Croping file...")).show();
                 },
                 success: function (resp) {
-                    if (_.check4errors(resp, false))
+                    if (_.check4errors(resp))
                         return;
-
                     _.refresh();
                 },
                 error: function (xhr) {
-                    _.alert(_.label("Unknown error."));
                     console.log(xhr.responseText);
+                    _.alert(_.label(xhr.responseText));
                 },
                 complete: function () {
                     $('#loading').hide();
