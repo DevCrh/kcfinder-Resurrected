@@ -20,7 +20,7 @@ class session
     {
         // Puerto y la URL del sitio
         define('PROTOCOL', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http"); // Detectar si está en HTTPS o HTTP
-        define('HOST', $_SERVER['HTTP_HOST'] === 'localhost' ? 'localhost' : $_SERVER['HTTP_HOST']); // Dominio o host localhost.com tudominio.com
+        define('HOST', $_SERVER['HTTP_HOST']); // Autoridad HTTP completa, incluido el puerto si existe
         define('CUR_PAGE', PROTOCOL . '://' . HOST);
 
         // Start session if it is not already started

@@ -12,6 +12,18 @@ class Default_kcfinderPlugin
 {
     protected static $authenticated = false;
 
+    protected static function cookieDomain()
+    {
+        $host = parse_url('http://' . $_SERVER['HTTP_HOST'], PHP_URL_HOST);
+        if (!is_string($host))
+            return '';
+
+        $host = trim($host, '[]');
+        return (($host === '') || (strpos($host, '.') === false) || filter_var($host, FILTER_VALIDATE_IP))
+            ? ''
+            : $host;
+    }
+
     public static function checkAuth()
     {
         $current_cwd = getcwd();
@@ -22,7 +34,7 @@ class Default_kcfinderPlugin
 
         if (!self::$authenticated) {
             // Verifica autenticación y configura KCFinder
-            $site_path = realpath(ROOT . 'upload');
+            $site_path = realpath(ROOT . '/upload');
             if ($auth) {
                 self::$authenticated = true;
                 $_SESSION['KCFINDER'] = array();
@@ -39,12 +51,12 @@ class Default_kcfinderPlugin
                 // CSRF Token
                 $token = bin2hex(random_bytes(100));
                 $_SESSION['kcCsrf'] = $token;
-                setcookie('kcCsrf', $token, 0, '/', HOST);
+                setcookie('kcCsrf', $token, 0, '/', self::cookieDomain());
             } else {
                 // Limpia la sesión de KCFinder
                 unset($_SESSION['kcCsrf'], $_SESSION['KCFINDER']);
                 if (isset($_COOKIE['kcCsrf'])) {
-                    setcookie('kcCsrf', '', time() - 3600, '/', HOST);
+                    setcookie('kcCsrf', '', time() - 3600, '/', self::cookieDomain());
                 }
             }
         }

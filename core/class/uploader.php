@@ -162,12 +162,12 @@ class uploader
         }
 
         // COOKIES INIT
-        $ip = '(25[0-5]|2[0-4][0-9]|[1]?[0-9][0-9]?)';
-        $ip = '/^' . implode('\.', array($ip, $ip, $ip, $ip)) . '\:?(\d+)?$/';
-        if (preg_match($ip, $_SERVER['HTTP_HOST']) || preg_match('/^[^\.]+$/', $_SERVER['HTTP_HOST']))
+        $cookieHost = parse_url('http://' . $_SERVER['HTTP_HOST'], PHP_URL_HOST);
+        $cookieHost = is_string($cookieHost) ? trim($cookieHost, '[]') : '';
+        if (($cookieHost === '') || (strpos($cookieHost, '.') === false) || filter_var($cookieHost, FILTER_VALIDATE_IP))
             $this->config['cookieDomain'] = "";
         elseif (!strlen($this->config['cookieDomain']))
-            $this->config['cookieDomain'] = $_SERVER['HTTP_HOST'];
+            $this->config['cookieDomain'] = $cookieHost;
         if (!strlen($this->config['cookiePath']))
             $this->config['cookiePath'] = "/";
 

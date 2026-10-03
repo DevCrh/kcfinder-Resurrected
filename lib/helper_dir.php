@@ -43,7 +43,7 @@ class dir
      * @param array $failed
      * @return mixed */
 
-    static function prune($dir, $firstFailExit = true, array $failed = null)
+    static function prune($dir, $firstFailExit = true, ?array $failed = null)
     {
         if ($failed === null) $failed = array();
         $files = self::content($dir);

@@ -2,7 +2,6 @@
 require "integration/default.php";
 
 define('ROOT', dirname(__FILE__));
-define('HOST', $_SERVER['HTTP_HOST'] === 'localhost' ? 'localhost' : $_SERVER['HTTP_HOST']); // Dominio o host localhost.com tudominio.com
 
 // configurar variables de inicio
 $Default_kcfinderPlugin = new Default_kcfinderPlugin();
