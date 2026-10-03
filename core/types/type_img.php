@@ -16,6 +16,10 @@ class type_img
     public function checkFile($file, array $config)
     {
 
+        $maxPixels = isset($config['_maxImagePixels']) ? $config['_maxImagePixels'] : 25000000;
+        if (!image::safeImageSize($file, $maxPixels))
+            return "Invalid or oversized image file.";
+
         $driver = isset($config['imageDriversPriority']) ? image::getDriver(explode(" ", $config['imageDriversPriority'])) : "gd";
         $img = image::factory($driver, $file);
 

@@ -14,8 +14,10 @@ class Default_kcfinderPlugin
 
     public static function checkAuth()
     {
+        require_once __DIR__ . '/security.php';
         $current_cwd = getcwd();
-        $auth = true; // simula tu que has iniciado session
+        // Replace this with the host application's authenticated user check.
+        $auth = false;
         // Start session if it is not already started
         if (!session_id())
             session_start();
@@ -41,8 +43,8 @@ class Default_kcfinderPlugin
                 $_SESSION['kcCsrf'] = $token;
                 setcookie('kcCsrf', $token, 0, '/', HOST);
             } else {
-                // Limpia la sesión de KCFinder
-                unset($_SESSION['kcCsrf'], $_SESSION['KCFINDER']);
+                self::$authenticated = false;
+                \kcfinder\revoke_access();
                 if (isset($_COOKIE['kcCsrf'])) {
                     setcookie('kcCsrf', '', time() - 3600, '/', HOST);
                 }

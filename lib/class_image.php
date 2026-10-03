@@ -100,6 +100,41 @@ abstract class image
     return false;
   }
 
+  /** Check dimensions without multiplying values that may overflow. */
+  final public static function dimensionsWithinLimit($width, $height, $maxPixels)
+  {
+    $width = filter_var($width, FILTER_VALIDATE_INT);
+    $height = filter_var($height, FILTER_VALIDATE_INT);
+    $maxPixels = filter_var($maxPixels, FILTER_VALIDATE_INT);
+
+    return ($width !== false) && ($height !== false) && ($maxPixels !== false) &&
+      ($width > 0) && ($height > 0) && ($maxPixels > 0) &&
+      ($width <= intdiv($maxPixels, $height));
+  }
+
+  /** Read image metadata and reject files outside the configured pixel budget. */
+  final public static function safeImageSize($file, $maxPixels)
+  {
+    $size = @getimagesize($file);
+
+    return is_array($size) && isset($size[0], $size[1]) &&
+      self::dimensionsWithinLimit($size[0], $size[1], $maxPixels)
+      ? $size
+      : false;
+  }
+
+  /** Read in-memory image metadata before a decoder allocates its pixel buffer. */
+  final public static function safeImageStringSize($data, $maxPixels, $expectedType)
+  {
+    $size = is_string($data) ? @getimagesizefromstring($data) : false;
+
+    return is_array($size) && isset($size[0], $size[1], $size[2]) &&
+      ($size[2] === $expectedType) &&
+      self::dimensionsWithinLimit($size[0], $size[1], $maxPixels)
+      ? $size
+      : false;
+  }
+
 
   /** Devuelve una matriz. Elemento 0 - recurso de imagen. Elemento 1 - ancho. Elemento 2 - altura.
    * Devuelve FALSE en caso de error.

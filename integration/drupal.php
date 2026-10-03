@@ -38,6 +38,7 @@ function get_drupal_path()
 
 function CheckAuthentication($drupal_path)
 {
+    require_once __DIR__ . '/security.php';
 
     static $authenticated;
 
@@ -83,9 +84,7 @@ function CheckAuthentication($drupal_path)
                 }
 
                 // User has permission, so make sure KCFinder is not disabled!
-                if (!isset($_SESSION['KCFINDER']['disabled'])) {
-                    $_SESSION['KCFINDER']['disabled'] = false;
-                }
+                $_SESSION['KCFINDER']['disabled'] = false;
 
                 global $user;
                 $_SESSION['KCFINDER']['uploadURL'] = strtr(variable_get('kcfinder_upload_url', 'sites/default/files/kcfinder'), array('%u' => $user->uid, '%n' => $user->name));
@@ -100,6 +99,7 @@ function CheckAuthentication($drupal_path)
                 return true;
             }
 
+            \kcfinder\revoke_access();
             chdir($current_cwd);
             return false;
         }

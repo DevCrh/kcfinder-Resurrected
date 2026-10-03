@@ -10,6 +10,7 @@
 class BolmerCMS{
     protected static $authenticated = false;
     static function checkAuth() {
+        require_once __DIR__ . '/security.php';
         $current_cwd = getcwd();
         if ( ! self::$authenticated) {
             define('BOLMER_API_MODE', true);
@@ -22,13 +23,14 @@ class BolmerCMS{
                 if (!isset($_SESSION['KCFINDER'])) {
                     $_SESSION['KCFINDER'] = array();
                 }
-                if(!isset($_SESSION['KCFINDER']['disabled'])) {
-                    $_SESSION['KCFINDER']['disabled'] = false;
-                }
+                $_SESSION['KCFINDER']['disabled'] = false;
                 $_SESSION['KCFINDER']['_check4htaccess'] = false;
                 $_SESSION['KCFINDER']['uploadURL'] = '/assets/';
                 $_SESSION['KCFINDER']['uploadDir'] = BOLMER_BASE_PATH.'assets/';
                 $_SESSION['KCFINDER']['theme'] = 'default';
+            } else {
+                self::$authenticated = false;
+                \kcfinder\revoke_access();
             }
         }
 

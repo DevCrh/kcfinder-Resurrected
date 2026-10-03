@@ -332,6 +332,7 @@ class uploader
     {
         $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
         if ($csrfResp !== true) {
+            $file = $this->file;
             if (isset($file['tmp_name'])) @unlink($file['tmp_name']);
             $message = $this->label($csrfResp);
             if (strlen($message) && method_exists($this, 'errorMsg'))
@@ -461,7 +462,8 @@ class uploader
 
         // Validación de tamaño máximo
         $maxSize = $this->config['_dropUploadMaxFilesize'] ?? 10 * 1024 * 1024; // Usa el config o 10MB por defecto
-        if (isset($file['size']) && $file['size'] > $maxSize) {
+        $actualSize = @filesize($file['tmp_name']);
+        if (($actualSize === false) || ($actualSize > $maxSize)) {
             @unlink($file['tmp_name']);
             return $this->label("The uploaded file exceeds {size} bytes.", array('size' => $this->formatBytes($maxSize)));
         }
@@ -495,7 +497,7 @@ class uploader
             $class = __NAMESPACE__ . "\\type_$type";
             if (class_exists($class)) {
                 $type = new $class();
-                $cfg = $config;
+                $cfg = $this->config;
                 $cfg['filename'] = $file['name'];
                 if (strlen($params))
                     $cfg['params'] = trim($params);
@@ -507,10 +509,10 @@ class uploader
         }
 
         // IMAGE RESIZE
-        if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-            if (!@getimagesize($file['tmp_name'])) {
+        if (strpos($mime, 'image/') === 0) {
+            if (!image::safeImageSize($file['tmp_name'], $this->config['_maxImagePixels'])) {
                 @unlink($file['tmp_name']);
-                return $this->label("Invalid image file.");
+                return $this->label("Invalid or oversized image file.");
             }
         }
         $img = image::factory($this->imageDriver, $file['tmp_name']);
@@ -663,7 +665,7 @@ class uploader
 
     protected function checkFilename($file)
     {
-        return (basename($file) === $file);
+        return is_string($file) && (strpbrk($file, "/\\\0") === false) && (basename($file) === $file);
     }
 
     protected function imageResize($image, $file = null)
@@ -758,6 +760,9 @@ class uploader
 
     protected function makeThumb($file, $overwrite = true)
     {
+        if (!image::safeImageSize($file, $this->config['_maxImagePixels']))
+            return true;
+
         $img = image::factory($this->imageDriver, $file);
         // Drop files which are not images
         if ($img->initError)

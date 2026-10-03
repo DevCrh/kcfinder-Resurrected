@@ -236,7 +236,11 @@ class browser extends uploader
                 throw new Exception($csrfResp);
             }
 
-            if (!isset($_POST['file']) || !isset($_POST['dir']) || !isset($_POST['x']) || !isset($_POST['y']) || !isset($_POST['w']) || !isset($_POST['h'])) {
+            if (!$this->config['access']['files']['upload']) {
+                throw new Exception("Unknown error.");
+            }
+
+            if (!isset($_POST['file']) || !$this->checkFilename($_POST['file']) || !isset($_POST['dir']) || !isset($_POST['x']) || !isset($_POST['y']) || !isset($_POST['w']) || !isset($_POST['h'])) {
                 $this->errorMsg("Missing required parameters.");
                 return false;
             }
@@ -246,6 +250,10 @@ class browser extends uploader
             $dir = str_replace(['\\', '//'], DIRECTORY_SEPARATOR, $dir);
             $src = $dir . $_POST['file'];
 
+            if (!$this->checkFilePath($src) || !is_file($src) || !is_readable($src)) {
+                throw new Exception("Unknown error.");
+            }
+
             // Usar generateSafeFilename para manejar el nombre del archivo
             $fileInfo = pathinfo($_POST['file']);
             $extension = strtolower($fileInfo['extension'] ?? '');
@@ -254,6 +262,19 @@ class browser extends uploader
             if (!in_array($extension, ['jpg', 'jpeg', 'png'])) {
                 $this->errorMsg("Invalid image format. Only JPG/PNG allowed.");
                 return false;
+            }
+
+            $sourceSize = image::safeImageSize($src, $this->config['_maxImagePixels']);
+            $x = filter_var($_POST['x'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 0)));
+            $y = filter_var($_POST['y'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 0)));
+            $width = filter_var($_POST['w'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+            $height = filter_var($_POST['h'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+
+            if (($sourceSize === false) || ($x === false) || ($y === false) || ($width === false) || ($height === false) ||
+                !image::dimensionsWithinLimit($width, $height, $this->config['_maxImagePixels']) ||
+                ($x >= $sourceSize[0]) || ($y >= $sourceSize[1]) ||
+                ($width > $sourceSize[0] - $x) || ($height > $sourceSize[1] - $y)) {
+                throw new Exception("Invalid crop dimensions.");
             }
 
             // Cargar imagen según su tipo
@@ -275,8 +296,8 @@ class browser extends uploader
                 return false;
             }
 
-            $dst_r = ImageCreateTrueColor($_POST['w'], $_POST['h']);
-            imagecopyresampled($dst_r, $img_r, 0, 0, $_POST['x'], $_POST['y'], $_POST['w'], $_POST['h'], $_POST['w'], $_POST['h']);
+            $dst_r = ImageCreateTrueColor($width, $height);
+            imagecopyresampled($dst_r, $img_r, 0, 0, $x, $y, $width, $height, $width, $height);
 
             // Generar nombre seguro para el archivo recortado
             $croppedFilename = $this->generateSafeFilename($fileInfo['filename'], $extension, '_cropped');
@@ -299,8 +320,10 @@ class browser extends uploader
                     break;
             }
             // Liberar memoria
-            imagedestroy($dst_r);
-            imagedestroy($img_r);
+            if (PHP_VERSION_ID < 80000) {
+                imagedestroy($dst_r);
+                imagedestroy($img_r);
+            }
             return json_encode([
                 'status' => 'success',
                 'message' => 'Image cropped successfully',
@@ -318,97 +341,107 @@ class browser extends uploader
 
     protected function act_editimage()
     {
-        // Validar Csrf
         $csrfResp = validateCSRF($_POST['csrf_token'] ?? '');
         if ($csrfResp !== true) {
             $this->errorMsg($csrfResp);
         }
 
         try {
-            // Obtener datos del formulario
             $directory = $_POST['dir'] ?? '';
             $fileName = $_POST['file'] ?? '';
             $extension = strtolower($_POST['ext'] ?? 'jpg');
-            $quality = 95; // Calidad máxima para JPEG (95 es el punto óptimo calidad/tamaño)
+            $quality = 95;
 
-            // Validaciones básicas
-            if (empty($fileName)) {
-                $this->errorMsg("Missing required parameters.");
+            if (!$this->config['access']['files']['upload']) {
+                throw new Exception("Unknown error.");
+            }
+            if (empty($fileName) || !$this->checkFilename($fileName) ||
+                !in_array($extension, array('jpg', 'jpeg', 'png', 'webp'), true) ||
+                !$this->validateExtension($extension, $this->type)) {
+                throw new Exception("Invalid image file.");
             }
 
-            // Construir ruta
             $dir = isset($_GET['dir']) ? $this->getDir() : $this->postDir();
             $dir .= DIRECTORY_SEPARATOR;
             $dir = str_replace(['\\', '//'], DIRECTORY_SEPARATOR, $dir);
             $fullPath = rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-            // Verificar directorio
-            if (!file_exists($fullPath)) {
+            if (!is_dir($fullPath) || !dir::isWritable($fullPath) || !$this->checkFilePath($fullPath)) {
                 throw new Exception("Non-existing directory type.");
             }
 
-            // Procesar solo base64 (eliminé el blob para simplificar)
             if (!isset($_POST['base64'])) {
                 throw new Exception("Only base64 images are accepted");
             }
 
-            // Decodificar imagen
-            $base64 = $_POST['base64'];
-            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
-
-            if ($imageData === false) {
-                throw new Exception("Error decoding base64");
+            $encoded = preg_replace('#^data:image/[a-z0-9.+-]+;base64,#i', '', $_POST['base64']);
+            $imageData = base64_decode($encoded, true);
+            $maxSize = (int) $this->config['_dropUploadMaxFilesize'];
+            if (($imageData === false) || (strlen($imageData) > $maxSize)) {
+                throw new Exception("Invalid or oversized image data.");
             }
 
-            // Generar nombre seguro
+            $expectedTypes = array(
+                'jpg' => IMAGETYPE_JPEG,
+                'jpeg' => IMAGETYPE_JPEG,
+                'png' => IMAGETYPE_PNG,
+                'webp' => defined('IMAGETYPE_WEBP') ? IMAGETYPE_WEBP : -1
+            );
+            $expectedMimeTypes = array(
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'webp' => 'image/webp'
+            );
+            $allowedMimeTypes = (array) ($this->config['allowMimeTypes'] ?? array());
+            if (!in_array($expectedMimeTypes[$extension], $allowedMimeTypes, true)) {
+                throw new Exception("Denied image MIME type.");
+            }
+            $size = image::safeImageStringSize(
+                $imageData,
+                $this->config['_maxImagePixels'],
+                $expectedTypes[$extension]
+            );
+            if ($size === false) {
+                throw new Exception("Invalid or oversized image file.");
+            }
+
+            $image = @imagecreatefromstring($imageData);
+            if ($image === false) {
+                throw new Exception("Invalid image file.");
+            }
+
             $newFileName = $this->generateSafeFilename($fileName, $extension, '_edited');
             $filePath = $fullPath . $newFileName;
+            if (!$this->checkFilePath($filePath)) {
+                if (PHP_VERSION_ID < 80000) imagedestroy($image);
+                throw new Exception("Unknown error.");
+            }
 
-            // Guardar según el formato con máxima calidad
+            $temporary = tempnam($fullPath, '.kcfinder-');
+            if ($temporary === false) {
+                if (PHP_VERSION_ID < 80000) imagedestroy($image);
+                throw new Exception("Failed to save image.");
+            }
+
+            $saved = false;
             switch ($extension) {
                 case 'jpg':
                 case 'jpeg':
-                    // Guardar directamente el JPEG con máxima calidad
-                    file_put_contents($filePath, $imageData);
-
-                    // Re-comprimir con calidad controlada (opcional)
-                    $image = @imagecreatefromstring($imageData);
-                    if ($image !== false) {
-                        imagejpeg($image, $filePath, $quality);
-                        imagedestroy($image);
-                    }
+                    $saved = imagejpeg($image, $temporary, $quality);
                     break;
-
                 case 'png':
-                    // PNG sin compresión (máxima calidad)
-                    file_put_contents($filePath, $imageData);
-
-                    // Optimizar PNG (opcional)
-                    $image = @imagecreatefromstring($imageData);
-                    if ($image !== false) {
-                        imagesavealpha($image, true);
-                        imagepng($image, $filePath, 0); // 0 = sin compresión
-                        imagedestroy($image);
-                    }
+                    imagesavealpha($image, true);
+                    $saved = imagepng($image, $temporary, 0);
                     break;
-
                 case 'webp':
-                    // WEBP con máxima calidad
-                    $image = @imagecreatefromstring($imageData);
-                    if ($image !== false) {
-                        imagewebp($image, $filePath, 100); // 100 = máxima calidad
-                        imagedestroy($image);
-                    } else {
-                        throw new Exception("Failed to save image.");
-                    }
+                    $saved = function_exists('imagewebp') && imagewebp($image, $temporary, 100);
                     break;
-
-                default:
-                    throw new Exception("Unsupported image format.");
             }
+            if (PHP_VERSION_ID < 80000) imagedestroy($image);
 
-            // Verificar que se guardó correctamente
-            if (!file_exists($filePath)) {
+            if (!$saved || !@chmod($temporary, $this->config['filePerms']) || !@rename($temporary, $filePath)) {
+                @unlink($temporary);
                 throw new Exception("Failed to save image.");
             }
 
@@ -417,7 +450,7 @@ class browser extends uploader
                 'message' => 'Imagen guardada con máxima calidad',
                 'newPath' => str_replace('\\', '/', $directory . '/' . $newFileName),
                 'fileName' => $newFileName,
-                'fileSize' => filesize($filePath) // Para debug
+                'fileSize' => filesize($filePath)
             ]);
         } catch (Exception $e) {
             error_log("Error en act_editimage: " . $e->getMessage());
@@ -1251,17 +1284,24 @@ class browser extends uploader
 
     private function downloadURL($url, $dir)
     {
-        if (!preg_match(phpGet::$urlExpr, $url, $match))
+        if (!phpGet::isSafeUrl($url))
             return;
 
-        if ((isset($match[7]) && strlen($match[7])))
-            $furl = explode("&", $match[7]);
-
-        $filename = isset($furl) ? basename($furl[0]) : "web_image.jpg";
+        $path = parse_url($url, PHP_URL_PATH);
+        $filename = is_string($path) && strlen(basename($path)) ? basename($path) : "web_image.jpg";
+        $filename = $this->checkFilename($filename) ? $filename : "web_image.jpg";
         $file = tempnam(sys_get_temp_dir(), $filename);
+        if ($file === false)
+            return ['status' => "error", 'msg' => "Failed to create temporary file."];
+        $maxSize = (int) $this->config['_dropUploadMaxFilesize'];
 
-        if (phpGet::get($url, $file)) {
-            return $this->moveDownloadFileDrag(array('name' => $filename, 'tmp_name' => $file, 'error' => UPLOAD_ERR_OK), $dir, false);
+        if (phpGet::get($url, $file, null, $maxSize)) {
+            return $this->moveDownloadFileDrag(array(
+                'name' => $filename,
+                'tmp_name' => $file,
+                'size' => filesize($file),
+                'error' => UPLOAD_ERR_OK
+            ), $dir, false);
         } else {
             @unlink($file);
             return ['status' => "error", 'msg' => "Failed to save image."];

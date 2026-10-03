@@ -138,6 +138,7 @@ $_DEFAULTS = array(
     '_check4htaccess' => true,
     '_normalizeFilenames' => true,
     '_dropUploadMaxFilesize' => 10485760, //9MB
+    '_maxImagePixels' => 25000000,
     '_appendUniqueSuffixOnOverwrite' => true,    // If it is set to true files will not be overwritten and instead (upon coflict) a numeric suffix will be appended to uploaded file name.
     //'_tinyMCEPath' => "/tiny_mce",
 );
