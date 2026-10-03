@@ -1,61 +1,90 @@
-# KCFinder Resurrected Ajax & PHP web file manager 
+# KCFinder Resurrected — Fin del desarrollo público
 
-### Ultima Version 4.0 01/04/2025
-#### Changelog
-4.00-test1: 2025-04-01
-* Agregado CSRF Token a todos los endpoint de core/browser.php
-* Agregado CSRF Token a core/uploader.php
-* Algunos problemas de seguridad importantes resueltos
-* Agregado editor de imágenes subidas Filerobot
-* Mejoras en verificación de archivos subidos
-* JQuery actualizado a v3.7.1
-* Agregado ejemplo de para la nueva integración (index.php)
-* Mejoras en dragupload desde sitios externos
-* Múltiples mejoras de código
-* Eliminación de código obsoleto JS y referencias a navegadores descontinuados
+KCFinder Resurrected nació con una idea muy sencilla de uno de nuestros desarrolladores: mantener vivo el espíritu del KCFinder original de **sunhater**, una herramienta ligera, práctica y creada para la comunidad.
 
-### Description
-KCFinder Resurrected, es la continuación del proyecto original kcfinder (https://github.com/sunhater/kcfinder) creado por Pavel Tzonkov, el cual esta sin soporte ni desarrollo desde Sep 2014, KCFinder Resurrected fue actualizado a la ultima version de jQuery y jQuery UI, se corrigieron algunos errores de seguridad críticos y se agregaron nuevas características como el poder recortar imágenes ya subidas desde el menu con Jcrop, ademas de contar con mejor soporte para versiones actuales de php y una renovación de la interfaz.
+Durante este tiempo, en **Grupo AmaHer** destinamos recursos y financiamos el trabajo de desarrollo necesario para mantener y ampliar este proyecto, ya que KCFinder formó parte importante de nuestro propio software, especialmente de **RoseAdmon**.
 
-## Overview
-KCFinder es un reemplazo gratuito de código abierto del administrador de archivos web CKFinder. Se puede integrar en los editores web CKEditor y TinyMCE WYSIWYG (o sus aplicaciones web personalizadas) para cargar y administrar imágenes y otros archivos que se pueden incrustar en el contenido HTML generado por un editor.
+Siempre hemos procurado conservar y reconocer claramente el trabajo de quienes hicieron posible el proyecto original.
 
-## Licenses
-* GNU General Public License, version 3
-* GNU Lesser General Public License, version 3
+Sin embargo, hemos decidido **dar por terminado el desarrollo público de KCFinder Resurrected y dejar de utilizarlo en nuestro software para apostar por una solucion popia**.
 
-#### Credits
-Original project by Pavel Tzonkov https://github.com/sunhater/kcfinder
-Editor de imágenes Filerobot https://scaleflex.github.io/filerobot-image-editor/
+El código actualmente publicado permanecerá disponible bajo los términos de su licencia correspondiente, pero las siguientes generaciones de nuestro desarrollo interno no serán publicadas como nuevas versiones de este proyecto.
 
-## Features
-* Edición de imágenes Subidas con Filerobot 
-* Recorte rápido de imágenes Subidas con Jcrop
-* Jquery y Jquery Ui en su ultima Version (jQuery v3.7.1  y  jQuery UI v1.13.2)
-* Motor Ajax con respuestas JSON 
-* Carga de varios archivos 
-* Cargar archivos usando HTML5 arrastrar y soltar desde el administrador de archivos local 
-* Arrastre y suelte imágenes desde páginas HTML externas. Se pueden eliminar varias imágenes usando la selección (solo Firefox) 
-* Descargar varios archivos o una carpeta como un solo archivo ZIP 
-* Seleccione varios archivos con la tecla Ctrl / Comando 
-* Portapapeles para copiar, mover y descargar múltiples archivos 
-* Fácil de integrar y configurar en aplicaciones web 
-* Opción para seleccionar y devolver varios archivos. Solo para aplicaciones personalizadas 
-* Cambiar el tamaño de las imágenes cargadas. Resolución de imagen máxima configurable 
-* Soporte de marca de agua PNG * Resolución de miniaturas configurable 
-* Rotar y / o voltear automáticamente las imágenes cargadas dependiendo de la etiqueta EXIF de información de orientación si existe 
-* Soporte de múltiples temas 
-* Soporta varios idiomas
-* Vista previa de imágenes en tamaño completo
+## Lo que estaba previsto y desarrollado
 
-## Compatibility
-* KCFinder se prueba oficialmente en el servidor web Apache 2.4 solamente, pero probablemente funcionará en otros servidores web.
-* Se requiere PHP 7.4 o superior. El modo seguro debe estar desactivado. 
-* Se requiere al menos una de estas extensiones de PHP: GD, ImageMagick o GraphicsMagick. 
-* Para trabajar con caché HTTP del lado del cliente, el PHP debe instalarse como módulo Apache. 
-* KCFinder soporta el reconocimiento de tipo MIME para los archivos cargados. Si planea usar esta función, debe cargar la extensión Fileinfo PHP. 
-* La extensión PHP ZIP debe cargarse para tener la opción de descargar múltiples archivos y directorios como un solo archivo ZIP. 
-* La rotación automática y volteo de imágenes requiere la extensión PHP EXIF.
+La siguiente gran versión de KCFinder Resurrected iba a incorporar una cantidad considerable de trabajo que ya existe total o parcialmente dentro de nuestra infraestructura.
 
-## Desarrollo
-Espero poder subir actualizaciones y correcciones con mas frecuencia, aun falta un reproductor de video y un visor de documentos.
+Parte de este trabajo todavía no había llegado al repositorio público debido, principalmente, a la carga de trabajo de nuestro departamento de desarrollo y a las prioridades de nuestros productos en producción.
+
+Entre las mejoras desarrolladas o contempladas para esta nueva generación se encontraban:
+
+- Conversión y soporte avanzado de imágenes WebP, Avif.
+- Compresión avanzada de WebP mediante `cwebp`.
+- Compresión y optimización automática de imágenes.
+- Integración con CDN y Server propio.
+- Mejoras importantes en las APIs internas.
+- Mayor aislamiento de rutas y directorios.
+- Evolución del sistema `onlyDir` para limitar con mayor precisión el acceso al filesystem.
+- Mejoras importantes de seguridad y validación.
+- Nuevas protecciones relacionadas con uploads y manipulación de archivos.
+- Soporte e integración con Dropzone y conector Summer Note.
+- Mejoras en la papelera, recuperación y administración de archivos.
+- Modernización de componentes heredados de KCFinder.
+- Mejor integración con aplicaciones externas y servicios independientes.
+- Integración completa con Trust Files para protección de poliglotas, validación de firmas magicas.
+- Minificacion real de css y js.
+- Soporte completo nginx.
+
+Muchas de estas funciones surgieron de necesidades reales de producción y de años de evolución dentro de nuestros propios sistemas.
+
+## ¿Por qué detener el desarrollo público?
+
+Seguimos creyendo profundamente en el software libre y en compartir herramientas útiles con desarrolladores y con la comunidad y desarrolladores independientes.
+
+Lo que ya hemos publicado seguirá siendo parte de esa contribución.
+
+También entendemos y respetamos que las licencias bajo las cuales se distribuye este software permiten que terceros estudien, modifiquen y reutilicen el código, incluso en determinados contextos comerciales, siempre dentro de los términos de dichas licencias.
+
+Sin embargo, existe una diferencia entre **contribuir a una comunidad** y financiar de manera indefinida investigación, mantenimiento, seguridad y nuevas funcionalidades que posteriormente pueden convertirse en una fuente continua de desarrollo para proyectos y organizaciones ajenas a la comunidad independiente y sobre la cual se sostiene el open source.
+
+**Grupo AmaHer no tiene como objetivo convertirse en un departamento de investigación y desarrollo gratuito para otras organizaciones.**
+
+Nuestro trabajo continuará priorizando nuestros propios productos, nuestros usuarios y aquellos proyectos con los que compartimos una filosofía de colaboración real.
+
+Esta decisión no pretende limitar los derechos ya concedidos sobre el código publicado ni significa que estemos en contra del uso comercial permitido por sus respectivas licencias.
+
+Significa simplemente que **hemos decidido dejar de publicar públicamente las futuras innovaciones de esta línea de desarrollo**.
+
+## El futuro
+
+KCFinder Resurrected permanecerá disponible como parte de nuestra contribución histórica a la comunidad.
+
+Nuestro desarrollo interno continuará evolucionando hacia una arquitectura diferente, cada vez más desacoplada del KCFinder original y diseñada alrededor de servicios, APIs, almacenamiento, procesamiento de imágenes, CDN y controles de seguridad modernos.
+
+Esa evolución forma parte ahora de nuestra infraestructura interna.
+
+En el futuro podremos liberar nuevos proyectos, componentes o tecnologías cuando consideremos que existe una forma sostenible de hacerlo y que el proyecto puede conservar los principios bajo los cuales fue creado.
+
+## Gracias
+
+Nuestro agradecimiento sigue siendo, antes que nada, para **sunhater y los autores originales de KCFinder**.
+
+KCFinder demostró que un administrador de archivos podía ser sencillo, funcional y abierto, sin convertirse en una solución innecesariamente compleja.
+
+Esa filosofía fue la razón por la que elegimos KCFinder originalmente y seguirá influyendo en nuestro propio software.
+
+También agradecemos a todas las personas que utilizaron KCFinder Resurrected, reportaron errores, enviaron mejoras o simplemente encontraron útil nuestro trabajo.
+
+**El desarrollo público de KCFinder Resurrected termina aquí.**
+
+Las ideas continúan.
+
+**Esto jamas hubiera sido pasible sin estos maravillosos proyectos.**
+https://github.com/sunhater/kcfinder
+https://github.com/scaleflex/filerobot-image-editor
+https://jcrop.com/
+https://jquery.com/
+https://www.flaticon.es/
+https://icons8.com/
+
+— **Grupo AmaHer / DevCRH**
