@@ -6,7 +6,7 @@ Durante este tiempo, en **Grupo AmaHer** destinamos recursos y financiamos el tr
 
 Siempre hemos procurado conservar y reconocer claramente el trabajo de quienes hicieron posible el proyecto original.
 
-Sin embargo, hemos decidido **dar por terminado el desarrollo público de KCFinder Resurrected y dejar de utilizarlo en nuestro software para apostar por una solucion popia**.
+Sin embargo, hemos decidido **dar por terminado el desarrollo público de KCFinder Resurrected y dejar de utilizarlo en nuestro software para apostar por una solución propia**.
 
 El código actualmente publicado permanecerá disponible bajo los términos de su licencia correspondiente, pero las siguientes generaciones de nuestro desarrollo interno no serán publicadas como nuevas versiones de este proyecto.
 
@@ -18,34 +18,34 @@ Parte de este trabajo todavía no había llegado al repositorio público debido,
 
 Entre las mejoras desarrolladas o contempladas para esta nueva generación se encontraban:
 
-- Conversión y soporte avanzado de imágenes WebP, Avif.
+- Conversión y soporte avanzado de imágenes WebP y AVIF.
 - Compresión avanzada de WebP mediante `cwebp`.
 - Compresión y optimización automática de imágenes.
-- Integración con CDN y Server propio.
+- Integración con CDN y servidor propio.
 - Mejoras importantes en las APIs internas.
 - Mayor aislamiento de rutas y directorios.
 - Evolución del sistema `onlyDir` para limitar con mayor precisión el acceso al filesystem.
 - Mejoras importantes de seguridad y validación.
 - Nuevas protecciones relacionadas con uploads y manipulación de archivos.
-- Soporte e integración con Dropzone y conector Summer Note.
+- Soporte e integración con Dropzone y conector para Summernote.
 - Mejoras en la papelera, recuperación y administración de archivos.
 - Modernización de componentes heredados de KCFinder.
 - Mejor integración con aplicaciones externas y servicios independientes.
-- Integración completa con Trust Files para protección de poliglotas, validación de firmas magicas.
-- Minificacion real de css y js.
-- Soporte completo nginx.
+- Integración completa con Trust Files para protección frente a archivos políglotas y validación de firmas mágicas.
+- Minificación real de CSS y JavaScript.
+- Soporte completo para Nginx.
 
 Muchas de estas funciones surgieron de necesidades reales de producción y de años de evolución dentro de nuestros propios sistemas.
 
 ## ¿Por qué detener el desarrollo público?
 
-Seguimos creyendo profundamente en el software libre y en compartir herramientas útiles con desarrolladores y con la comunidad y desarrolladores independientes.
+Seguimos creyendo profundamente en el software libre y en compartir herramientas útiles con desarrolladores, con la comunidad y con desarrolladores independientes.
 
 Lo que ya hemos publicado seguirá siendo parte de esa contribución.
 
 También entendemos y respetamos que las licencias bajo las cuales se distribuye este software permiten que terceros estudien, modifiquen y reutilicen el código, incluso en determinados contextos comerciales, siempre dentro de los términos de dichas licencias.
 
-Sin embargo, existe una diferencia entre **contribuir a una comunidad** y financiar de manera indefinida investigación, mantenimiento, seguridad y nuevas funcionalidades que posteriormente pueden convertirse en una fuente continua de desarrollo para proyectos y organizaciones ajenas a la comunidad independiente y sobre la cual se sostiene el open source.
+Sin embargo, existe una diferencia entre **contribuir a una comunidad** y financiar de manera indefinida investigación, mantenimiento, seguridad y nuevas funcionalidades que posteriormente pueden convertirse en una fuente continua de desarrollo para proyectos y organizaciones ajenas a la comunidad de desarrolladores independientes con la que originalmente buscamos compartir este trabajo.
 
 **Grupo AmaHer no tiene como objetivo convertirse en un departamento de investigación y desarrollo gratuito para otras organizaciones.**
 
@@ -79,12 +79,13 @@ También agradecemos a todas las personas que utilizaron KCFinder Resurrected, r
 
 Las ideas continúan.
 
-**Esto jamas hubiera sido pasible sin estos maravillosos proyectos.**
-https://github.com/sunhater/kcfinder
-https://github.com/scaleflex/filerobot-image-editor
-https://jcrop.com/
-https://jquery.com/
-https://www.flaticon.es/
-https://icons8.com/
+**Esto jamás hubiera sido posible sin estos maravillosos proyectos:**
+
+- [KCFinder — sunhater](https://github.com/sunhater/kcfinder)
+- [Filerobot Image Editor](https://github.com/scaleflex/filerobot-image-editor)
+- [Jcrop](https://jcrop.com/)
+- [jQuery](https://jquery.com/)
+- [Flaticon](https://www.flaticon.es/)
+- [Icons8](https://icons8.com/)
 
 — **Grupo AmaHer / DevCRH**
